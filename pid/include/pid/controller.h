@@ -51,9 +51,10 @@
 #include <iostream>
 
 // Primary PID controller input & output variables
-double plant_state;                 // current output of plant
+//double plant_state;                 // current output of plant
 double control_effort;              // output of pid controller
-double setpoint = 0;                // desired output of plant
+//double setpoint = 0;                // desired output of plant
+double error = 0;                   // distance from point in database
 bool pid_enabled = true;            // PID is enabled to run
 
 ros::Time prev_time;
@@ -92,12 +93,12 @@ int loop_counter = 0; // Counts # of times through the control loop. Used to sta
 ros::Publisher control_effort_pub;
 
 std::string topic_from_controller;
-std::string topic_from_plant;
+//std::string topic_from_plant;
 std::string setpoint_topic;
 std::string node_name = "pid_node";
 
 std_msgs::Float64 control_msg;
-std_msgs::Float64 state_msg;
+//std_msgs::Float64 state_msg;
 
 // Diagnostic objects
 double min_loop_frequency = 1;
