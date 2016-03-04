@@ -126,7 +126,8 @@ void plant_state_callback(const std_msgs::Float64& state_msg)
   proportional = Kp * filtered_error.at(0);
   integral = Ki * error_integral;
   derivative = Kd * filtered_error_deriv.at(0);
-  control_effort = proportional + integral + derivative;
+//  control_effort = proportional + integral + derivative;
+  control_effort = setpoint;
 
   // Apply saturation limits
   if (control_effort > upper_limit)

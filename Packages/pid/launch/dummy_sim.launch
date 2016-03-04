@@ -12,9 +12,9 @@
       <param name="min_loop_frequency" value="95.0" />
      </node>
 
-    <node name="dummy_sim_node" pkg="pid" type="test_sim" output="screen" >
-      <param name="i_am_stupid" value="true" />
-    </node>
+    <node name="pololu_sim_node" pkg="pid" type="pololu_mc" output="screen" >
+      <rosparam i_am_stupid="true" />
+   </node>
 
     <node name="setpoint_node" pkg="pid" type="setpoint_node" output="screen" />
 

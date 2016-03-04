@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   }
 
   std_msgs::Float64 setpoint;
-  setpoint.data = 1.0;
+  setpoint.data = 50.0;    // initial error
   ros::Publisher setpoint_pub = setpoint_node.advertise<std_msgs::Float64>("setpoint", 1);
 
   ros::Rate loop_rate(0.2);   // change setpoint every 5 seconds
@@ -58,9 +58,15 @@ int main(int argc, char **argv)
   {
     ros::spinOnce();
 
-    setpoint_pub.publish(setpoint);     // publish twice so graph gets it as a step
-    setpoint.data = 0 - setpoint.data;
-    setpoint_pub.publish(setpoint);
+    if (setpoint.data > 0) {		// keep reducing value until equal to zero
+      setpoint_pub.publish(setpoint);     // publish twice so graph gets it as a step
+      setpoint.data = setpoint.data-10;    // make the error smaller for every iteration
+      setpoint_pub.publish(setpoint);
+    }
+    else {
+      setpoint_pub.publish(setpoint);
+      setpoint_pub.publish(setpoint);
+    }
 
     loop_rate.sleep();
   }
