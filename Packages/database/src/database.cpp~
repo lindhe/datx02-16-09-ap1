@@ -1,6 +1,7 @@
 //Save this in: catkin_workspace/src
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "srd_msgs/Float64.msg"
 #include "ackermann_msgs/AckermannDrive.h"
 
 #include <iostream>
@@ -19,17 +20,20 @@
     using namespace std;
     
     // [row - message][column - number]
-    float lines[20][5];
+    int lines[20][3];
     
     /**
     * Function for loading the checkpoints from a textfile.
+    * Rows in Data.txt has the format:
+    *   int:x int:y heading:int
+    *   
+    *   Note: heading in degrees. 
     */
     void loadTrack(string file){
         string line;
         ifstream datafile;
         datafile.open("src/database/src/data.txt",ifstream::in);
-        float steering_angle, steering_angle_velocity;
-        float speed, acceleration, jerk;
+        int coordinate_x, coordinate_y, heading;
         int i = 0;
         
         if(datafile.is_open()){
@@ -37,23 +41,18 @@
                 stringstream lineStream (line);
                 
                 //Get values from row
-                lineStream >> steering_angle >> steering_angle_velocity;
-                lineStream >> speed >> acceleration >> jerk;
+                lineStream >> coordinate_x >> coordinate_y >> heading;
                 
                 //For test
-                cout << "Steering Angle: " << steering_angle << '\n';
-                cout << "Steering Angle Velocity: " << steering_angle_velocity << '\n';
-                cout << "Speed: " << speed << '\n';
-                cout << "Acceleration: " << acceleration << '\n';
-                cout << "Jerk: " << jerk << '\n';
+                cout << "Coordinate_x: " << x << '\n';
+                cout << "Coordinate_y: " << y << '\n';
+                cout << "Heading: " << heading << '\n';
                 
-                lines[i][0] = steering_angle;
-                lines[i][1] = steering_angle_velocity;
-                lines[i][2] = speed;
-                lines[i][3] = acceleration;
-                lines[i][4] = jerk;
+                lines[i][0] = coordinate_x;
+                lines[i][1] = coordinate_y;
+                lines[i][2] = heading;
                 
-                cout << "Speed from array: " << lines[i][2] << '\n';
+                cout << "Heading from array: " << lines[i][2] << '\n';
                 
                 i++;
             }
@@ -109,7 +108,7 @@
         * Change topic when using controller
         */
         
-        ros::Publisher database_pub = n.advertise<ackermann_msgs::AckermannDrive>("mc_cmds", 1000);
+        ros::Publisher database_pub = n.advertise<std_msgs::Float64>("control_error", 1000);
         
         ros::Rate loop_rate(10);
         
@@ -128,35 +127,15 @@
             */
             
             if(count < 6) {
-                ackermann_msgs::AckermannDrive msg;
+                std_msgs::Float64 msg;
                 
                 float fl;
                 
                 //Steering Angle
-                fl = lines[count][0];
-                msg.steering_angle = fl;
+                fl = (float)lines[count][2];
+                msg.data = fl;
                 
-                //Steerng Angle Velocity
-                fl = lines[count][1];
-                msg.steering_angle_velocity = fl;
-                
-                //Speed
-                fl = lines[count][2];
-                msg.speed = fl;
-                
-                //Acceleration
-                fl = lines[count][3];
-                msg.acceleration = fl;
-                
-                //Jerk
-                fl = lines[count][4];
-                msg.jerk = fl;
-                
-                ROS_INFO("%.2f", msg.steering_angle);
-                ROS_INFO("%.2f", msg.steering_angle_velocity);
-                ROS_INFO("%.2f", msg.speed);
-                ROS_INFO("%.2f", msg.acceleration);
-                ROS_INFO("%.2f", msg.jerk);
+                ROS_INFO("%.2f", msg.data);
                 
                 /**
                 * The publish() function is how you send messages. The parameter
@@ -166,7 +145,7 @@
                 */
                 database_pub.publish(msg);
                 
-                usleep(2500000);
+                usleep(3000000);
             }
             
             ros::spinOnce();
