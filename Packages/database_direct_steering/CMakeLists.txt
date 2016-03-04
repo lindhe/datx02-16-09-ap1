@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(database)
+project(database_direct_steering)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -130,20 +130,20 @@ include_directories(
 # add_dependencies(database ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(database_node src/database.cpp)
+add_executable(database_mc_node src/database.cpp)
 
-add_executable(subscriber_node src/subscriber.cpp)
+add_executable(subscriber_mc_node src/subscriber.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(database_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(database_mc_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(subscriber_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(subscriber_mc_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(database_node ${catkin_LIBRARIES})
+target_link_libraries(database_mc_node ${catkin_LIBRARIES})
 
-target_link_libraries(subscriber_node ${catkin_LIBRARIES})
+target_link_libraries(subscriber_mc_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>database</name>
+  <name>database_direct_steering</name>
   <version>0.0.0</version>
   <description>The database package</description>
 
