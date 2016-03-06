@@ -46,7 +46,7 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
 {
   control_error = setpoint_msg.data;
 
-  Kp = 20, Ki = 1; Kd = 0;	//for testing
+  Kp = 2, Ki = 1; Kd = 1;	//for testing
   if ( !((Kp<=0. && Ki<=0. && Kd<=0.) || (Kp>=0. && Ki>=0. && Kd>=0.)) ) // All 3 gains should have the same sign
   {
     ROS_WARN("All three gains (Kp, Ki, Kd) should have the same sign for stability.");
@@ -77,6 +77,10 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
   // integrate the error
   error_integral += error.at(0) * delta_t.toSec();
 
+    ROS_INFO("error.at(0): %f", error.at(0));  //Debugging
+    ROS_INFO("delta_t.toSec(): %f", delta_t.toSec());  //Debugging
+    ROS_INFO("error_integral: %f", error_integral);  //Debugging
+
   // Apply windup limit to limit the size of the integral term
   if ( error_integral > fabsf(windup_limit))
     error_integral = fabsf(windup_limit);
@@ -103,11 +107,15 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
   filtered_error.at(1) = filtered_error.at(0); 
   filtered_error.at(0) = (1/(1+c*c+1.414*c))*(error.at(2)+2*error.at(1)+error.at(0)-(c*c-1.414*c+1)*filtered_error.at(2)-(-2*c*c+2)*filtered_error.at(1));
 
+    ROS_INFO("filtered_error.at(0): %f", filtered_error.at(0));  //Debugging
+
   // Take derivative of error
   // First the raw, unfiltered data:
   error_deriv.at(2) = error_deriv.at(1);
   error_deriv.at(1) = error_deriv.at(0);
   error_deriv.at(0) = (error.at(0)-error.at(1))/delta_t.toSec();
+
+    ROS_INFO("error_deriv.at(0): %f", error_deriv.at(0));  //Debugging
 
   filtered_error_deriv.at(2) = filtered_error_deriv.at(1);
   filtered_error_deriv.at(1) = filtered_error_deriv.at(0);
@@ -116,6 +124,8 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
     filtered_error_deriv.at(0) = (1/(1+c*c+1.414*c))*(error_deriv.at(2)+2*error_deriv.at(1)+error_deriv.at(0)-(c*c-1.414*c+1)*filtered_error_deriv.at(2)-(-2*c*c+2)*filtered_error_deriv.at(1));
   else
     loop_counter++;
+
+    ROS_INFO("filtered_error_deriv.at(0): %f", filtered_error_deriv.at(0));  //Debugging
 
   // calculate the control effort
   proportional = Kp * filtered_error.at(0);
@@ -148,12 +158,15 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
 
   if (control_error < 0)
   {
-    steering = control_effort/50; //for the moment (values will change)
+    steering = - control_effort/50; //for the moment (values will change)
   }
   else
   {
-    steering = - control_effort/50;
+    steering = control_effort/50;
   }
+
+    ROS_INFO("control_effort: %f", control_effort);  //Debugging
+    //ROS_INFO("steering: %f", steering);  //Debugging
 
   // Publish the stabilizing control effort if the controller is enabled
   if (true)
