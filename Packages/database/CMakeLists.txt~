@@ -132,7 +132,9 @@ include_directories(
 ## Declare a C++ executable
 add_executable(database_node src/database.cpp)
 
-add_executable(subscriber_node src/subscriber.cpp)
+add_executable(gv_fake_node src/gv_fake.cpp)
+
+add_executable(pid_fake_node src/pid_fake.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
