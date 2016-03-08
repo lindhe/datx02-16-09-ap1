@@ -55,6 +55,8 @@
     * Returns: Array of indicies to coordinates in track. 
     * [index_point1, index_point2]
     */
+    
+    //NOT YET TESTED
     int* initializeIndicies(int x1, int y1){
         int x2, y2, xdiff, ydiff, xdiff_pow, ydiff_pow, distance;
         point1 = 0;
@@ -88,6 +90,99 @@
             }
             i++;
         }
+    }
+    
+    /**
+    * Multplies 2 vectors.
+    * Arguments: vec1, vec2 as int[x,y].
+    * Returns a pointer to the resulting vector int[x,y].
+    */
+    int* multiplyVectors(int* vec1, int* vec2){
+        
+    }
+    
+    /**
+    * Arguments (vectors) on the form int[x_begin, x_end, y_begin, y_end].
+    * Function projects vec2_first onto vec1_first.
+    * Returns pointer to the resulting vector, int[x_res, y_res]
+    */
+    //NOT YET TESTED 
+    double calculateDistance(int* vec2_first, int* vec1_first){
+        //Maybe add exceptions for accessing arrays
+        int vec1[2], vec2[2];
+        double res_vec[2];
+        int x1_begin, x1_end, y1_begin, y1_end;
+        int x2_begin, x2_end, y2_begin, y2_end;
+        
+        //Move vectors to origo and represent them as [x,y]
+        x1_begin = vec1_first[0];
+        x1_end = vec1_first[1];
+        y1_begin = vec1_first[2];
+        y1_end = vec1_first[3];
+        
+        x2_begin = vec2_first[0];
+        x2_end = vec2_first[1];
+        y2_begin = vec2_first[2];
+        y2_end = vec2_first[3];
+        
+        //Vector 1
+        vec1[0] = x1_end - x1_begin;
+        vec1[1] = y1_end - y1_begin;
+        
+        cout << "Vector 1: [" << vec1[0] << "," << vec1[1] << "]" << '\n'; 
+        
+        //Vector 2
+        vec2[0] = x2_end - x2_begin;
+        vec2[1] = y2_end - y2_begin;
+        
+        cout << "Vector 2: [" << vec2[0] << "," << vec2[1] << "]" << '\n'; 
+        
+        if((vec1[0] == 0 && vec1[1] == 0) || (vec2[0] == 0 && vec2[1] == 0)){
+            throw 666;
+            return 0.0;
+        }
+        
+        //Project Vector 2 onto Vector 1
+        int numerator, denominator, product1, product2;
+        double numerator2, denominator2, result, product3, product4;
+        
+        product1 = vec2[0] * vec1[0];
+        product2 = vec2[1] * vec1[1];
+        numerator = product1 + product2;
+        
+        cout << "Numerator: " << numerator << '\n';
+        
+        product1 = vec1[0] * vec1[0];
+        product2 = vec1[1] * vec1[1];
+        denominator = product1 + product2;
+        
+        cout << "Denominator: " << denominator << '\n';
+        
+        numerator2 = (double)numerator;
+        denominator2 = (double)denominator;
+        
+        result = numerator2 / denominator2;
+        
+        cout << "Vector to scale: [" << vec1[0] << "," << vec1[1] << "]" << '\n';
+        cout << "Result: " << result << '\n';
+        
+        res_vec[0] = (double)vec1[0] * result;
+        res_vec[1] = (double)vec1[1] * result;
+        
+        cout << "Projected vector: [" << res_vec[0] << "," << res_vec[1] << "]" << '\n'; 
+        
+        //Calculate distance
+        double sum1, sum2, result2, distance;
+        
+        sum1 = vec2[0] - res_vec[0];
+        sum2 = vec2[1] - res_vec[1];
+        
+        product3 = sum1 * sum1;
+        product4 = sum2 * sum2;
+        
+        result2 = sqrt(product3 + product4);
+        
+        return result2;
     }
     
     /**
@@ -188,6 +283,87 @@
         
         loadTrack();
         
+        //1:st vector test.
+        double testResult;
+        int testVec2[4] = {1,5,1,3};
+        int testVec1[4] = {1,6,1,1};
+        try{
+            testResult = calculateDistance(&testVec2[0], &testVec1[0]);
+        }
+        catch(int e){
+            cout << "Exception occured, nr: " << e << '\n';
+            cout << "One of the arguments were 0" << '\n';
+        }
+        cout << "Distance1: " << testResult << '\n' << '\n';
+        
+        //2:nd vector test.
+        double testResult2;
+        int testVec4[4] = {0,3,0,0};
+        int testVec3[4] = {0,7,0,5};
+        try{
+            testResult2 = calculateDistance(&testVec4[0], &testVec3[0]);
+        }
+        catch(int e){
+            cout << "Exception occured, nr: " << e << '\n';
+            cout << "One of the arguments were 0" << '\n';
+        }
+        cout << "Distance2: " << testResult2 << '\n' << '\n';
+        
+        //3:rd vector test.
+        double testResult3;
+        int testVec6[4] = {-2,1,1,1};
+        int testVec5[4] = {-2,5,1,6};
+        try{
+            testResult3 = calculateDistance(&testVec6[0], &testVec5[0]);
+        }
+        catch(int e){
+            cout << "Exception occured, nr: " << e << '\n';
+            cout << "One of the arguments were 0" << '\n';
+        }
+        cout << "Distance3 (same as 2): " << testResult3 << '\n' << '\n';
+        
+        //4:th vector test.
+        double testResult4;
+        int testVec8[4] = {0,0,0,0};
+        int testVec7[4] = {0,5,0,0};
+        try{
+            testResult4 = calculateDistance(&testVec8[0], &testVec7[0]);
+        }
+        catch(int e){
+            cout << "Exception occured, nr: " << e << '\n';
+            cout << "One of the arguments were 0" << '\n';
+        }
+        cout << "Distance4: " << testResult4 << '\n' << '\n';
+        
+        //5:th vector test.
+        double testResult5;
+        int testVec10[4] = {0,5,0,0};
+        int testVec9[4] = {0,0,0,0};
+        try{
+            testResult5 = calculateDistance(&testVec10[0], &testVec9[0]);
+        }
+        catch(int e){
+            cout << "Exception occured, nr: " << e << '\n';
+            cout << "One of the arguments were 0" << '\n';
+        }
+        cout << "Distance5: " << testResult5 << '\n' << '\n';
+        
+        //6th vector test.
+        double testResult6;
+        int testVec12[4] = {0,5,0,0};
+        int testVec11[4] = {0,0,0,0};
+        try{
+            testResult6 = calculateDistance(&testVec12[0], &testVec11[0]);
+        }
+        catch(int e){
+            cout << "Exception occured, nr: " << e << '\n';
+            cout << "One of the arguments were 0" << '\n';
+        }
+        cout << "Distance6: " << testResult6 << '\n' << '\n';
+        
+        
+        
+        
         int count = 0;
     
         while (ros::ok()){
@@ -201,7 +377,7 @@
                 float fl;
                 
                 //Steering Angle
-                fl = (float)track[count][2];
+                fl = (float)track[count][1];
                 msg.data = fl;
                 
                 ROS_INFO("%.2f", msg.data);
