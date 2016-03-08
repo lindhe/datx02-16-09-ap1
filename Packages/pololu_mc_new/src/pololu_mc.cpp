@@ -23,10 +23,12 @@ using namespace std;
 using namespace boost;
 
 // Callback when something is published on 'control_effort'
-void ControlEffortCallback(const std_msgs::Float64& control_effort_input)
+void ControlEffortCallback(const ackermann_msgs::AckermannDrive::ConstPtr& control_effort_input)
 {
   // the stabilizing control effort
-    control_effort = control_effort_input.data;
+  ROS_INFO("Got a message!: \nSteering angle: %f\nSteering angle velocity:%f\nSpeed: %f\nAcceleration: %f\nJerk: %f\n", control_effort_input->steering_angle, control_effort_input->steering_angle_velocity, control_effort_input->speed,control_effort_input->acceleration, control_effort_input->jerk);
+
+    control_effort = control_effort_input->steering_angle;
 }
 
 /*
@@ -93,8 +95,8 @@ int set_steering_target(float angle) {
   cmd[3] = position >> 7 & 0x7F;
 
   cout << "Position to be set: " << position << endl;
-  printf("Set target (angle) command to be sent: %02x, %02x, %02x, %02x\n",
-          cmd[0], cmd[1], cmd[2], cmd[3]);
+  //printf("Set target (angle) command to be sent: %02x, %02x, %02x, %02x\n",
+  //        cmd[0], cmd[1], cmd[2], cmd[3]);
 
   current_steering_angle = angle;
   return 1; //send_packet(cmd, len);
@@ -309,20 +311,20 @@ int main(int argc, char **argv)
     return -1;
   }
 */
-    ROS_INFO("init-mc ok");  //Debugging
+    //ROS_INFO("init-mc ok");  //Debugging
 
     set_steering_speed(10);
 
   ros::NodeHandle node_priv("~");  //Not needed now, but cound maybe be useful later
 
-    ROS_INFO("nodehandle-params ok"); //Debugging
+    //ROS_INFO("nodehandle-params ok"); //Debugging
 
- // ros::Subscriber sub_mc_cmds = n.subscribe("mc_cmds", 1, callback); //for ackermann_msgs
+ // ros::Subscriber sub_mc_cmds = n.subscribe("mc_cmds", 1, callback); //for joy ackermann_msgs
 
   ros::Rate loop_rate(1000);
   mc_values_pub = n.advertise<pololu_mc::MCValues>("mc_values", 1000);
 
-    ROS_INFO("mc topics ok"); //Debugging
+    //ROS_INFO("mc topics ok"); //Debugging
 
   // Advertise a plant state msg
   /*std_msgs::Float64 plant_state;
@@ -332,37 +334,38 @@ int main(int argc, char **argv)
   // Subscribe to "control_effort" topic to get a controller_msg.msg
   ros::Subscriber sub = n.subscribe("control_effort", 1, ControlEffortCallback );
 
-    ROS_INFO("controller topics ok");
+    //ROS_INFO("controller topics ok");
 
   int counter = 0;
   while (ros::ok()) {
 
-    ROS_INFO("Beginning of while-loop"); //Debugging
+    //ROS_INFO("Beginning of while-loop"); //Debugging
 
     // Get values every x ms
     if (counter % GET_VALUES_INTERVAL == 0) {
       get_values();
-    ROS_INFO("apa"); //Debugging
     }
     // Send COMM_ALIVE every x ms
     // (might not be needed since we're sending COMM_GET_VALUES)
     if (counter % SEND_ALIVE_INTERVAL == 0) {
       send_alive();
-    ROS_INFO("apa2"); //Debugging
     }
     counter = (counter+1)%1000;
 
     ros::spinOnce();
-    ROS_INFO("Testing...");  //Debugging
-    set_steering_target(control_effort);
-    ROS_INFO("%f", control_effort);  //Debugging
+    //ROS_INFO("Testing...");  //Debugging
+
+  // Calculate a value between -22 and 22.
+    set_steering_target(control_effort/7);
+
+    ROS_INFO("steering: %f", control_effort/7);  //Debugging
     //plant_state.data = position;
     //servo_state_pub.publish(plant_state);
 
     // But process callbacks every loop
     ros::spinOnce();
     loop_rate.sleep();
-    ROS_INFO("End of while-loop");  //Debugging
+    //ROS_INFO("End of while-loop");  //Debugging
   }
     ROS_INFO("Almost done...");  //Debugging
   return 0;

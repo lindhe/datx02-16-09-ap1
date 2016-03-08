@@ -152,26 +152,12 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
     diag_status.message = "PID controller nominal";
   }
 
-  // Calculate a value between -22 and 22.
-
-  float steering;
-
-  if (control_error < 0)
-  {
-    steering = - control_effort/50; //for the moment (values will change)
-  }
-  else
-  {
-    steering = control_effort/50;
-  }
-
     ROS_INFO("control_effort: %f", control_effort);  //Debugging
-    //ROS_INFO("steering: %f", steering);  //Debugging
 
   // Publish the stabilizing control effort if the controller is enabled
   if (true)
   {
-    control_msg.data = steering;
+    control_msg.steering_angle = control_effort;
     control_effort_pub.publish(control_msg);
   }
   else
@@ -292,7 +278,7 @@ int main(int argc, char **argv)
   }
 
   // instantiate publishers & subscribers
-  control_effort_pub = node.advertise<std_msgs::Float64>(topic_from_controller, 1);
+  control_effort_pub = node.advertise<ackermann_msgs::AckermannDrive>(topic_from_controller, 1);
   ros::Subscriber setpoint_sub = node.subscribe(setpoint_topic, 1, setpoint_callback );
 
   // configure dynamic reconfiguration

@@ -44,6 +44,7 @@
 #include "ros/ros.h"
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
+#include "ackermann_msgs/AckermannDrive.h"
 
 #include "math.h"
 #include <stdio.h>
@@ -96,7 +97,7 @@ std::string topic_from_controller;
 std::string setpoint_topic;
 std::string node_name = "pid_node";
 
-std_msgs::Float64 control_msg;
+ackermann_msgs::AckermannDrive control_msg;
 //std_msgs::Float64 state_msg;
 
 // Diagnostic objects

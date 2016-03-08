@@ -17,7 +17,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 //#include "sensor_msgs/Range.h"
-//#include "ackermann_msgs/AckermannDrive.h"
+#include "ackermann_msgs/AckermannDrive.h"
 #include "pololu_mc/MCValues.h"
 
 #include <unistd.h>
@@ -53,5 +53,6 @@ float current_steering_angle;
 float current_speed;
 float prev_speed;
 bool emergency;
-static double control_effort;
+static float control_effort;
 uint16_t position;
+double control_error = 0;                   // distance from point in database

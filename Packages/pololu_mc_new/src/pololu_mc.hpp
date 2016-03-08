@@ -17,7 +17,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 //#include "sensor_msgs/Range.h"
-//#include "ackermann_msgs/AckermannDrive.h"
+#include "ackermann_msgs/AckermannDrive.h"
 #include "pololu_mc/MCValues.h"
 
 #include <unistd.h>

@@ -54,20 +54,48 @@ int main(int argc, char **argv)
 
   ros::Rate loop_rate(0.2);   // change setpoint every 5 seconds
 
-  while (ros::ok())
-  {
-    ros::spinOnce();
 
-    if (setpoint.data > 0) {		// keep reducing value until equal to zero
+    while (setpoint.data > -5 and ros::ok()) {		// keep reducing value until equal to zero
+
       setpoint_pub.publish(setpoint);     // publish twice so graph gets it as a step
       setpoint.data = setpoint.data-1;    // make the error smaller for every iteration
       setpoint_pub.publish(setpoint);
+
+      ROS_INFO("%f", setpoint.data);  //Debugging
+      ros::spinOnce();
+      loop_rate.sleep();
     }
-    else {
+
+    while (setpoint.data >= -5 and setpoint.data < 2 and ros::ok()) {
+
+      setpoint_pub.publish(setpoint);
+      setpoint.data = setpoint.data+1;	// When equal to -4, start increasing
+      setpoint_pub.publish(setpoint);
+
+      ROS_INFO("%f", setpoint.data);  //Debugging
+      ros::spinOnce();
+      loop_rate.sleep();
+    }
+
+    while (setpoint.data <= 2 and setpoint.data > 0 and ros::ok()) {
+
+      setpoint_pub.publish(setpoint);
+      setpoint.data = setpoint.data-1;	// When equal to 2, start decreasing to zero
+      setpoint_pub.publish(setpoint);
+
+      ROS_INFO("%f", setpoint.data);  //Debugging
+      ros::spinOnce();
+      loop_rate.sleep();
+    }
+
+    while (setpoint.data == 0 and ros::ok()) {
+
       setpoint_pub.publish(setpoint);
       setpoint_pub.publish(setpoint);
+
+      ROS_INFO("%f", setpoint.data);  //Debugging
+      ros::spinOnce();
+      loop_rate.sleep();
     }
-    ROS_INFO("%f", setpoint.data);  //Debugging
-    loop_rate.sleep();
-  }
+
 }
