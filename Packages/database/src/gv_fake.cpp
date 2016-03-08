@@ -40,6 +40,8 @@
             
             loop_rate.sleep();
             
+            usleep(1000000);
+            
             ++count;
             
             }

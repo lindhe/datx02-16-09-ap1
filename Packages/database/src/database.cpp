@@ -23,6 +23,8 @@
     * Run this rosnode from workspace. Otherwise
     * the file data.txt won't be found.
     *
+    * No blank rows in database file,
+    * no newline at end of file.
     */
     
     using namespace std;
@@ -50,55 +52,54 @@
     
     
     /**
+    * TODO: Write function for calculating the distance from
+    * the car to the 2 closest checkpoints, and switching pointers
+    * to next checkpoint when one is passed.
+    */
+    
+    /**
     * Function for initializing track pointers
     * Argument: Position of the car
     * Returns: Array of indicies to coordinates in track. 
     * [index_point1, index_point2]
     */
     
-    //NOT YET TESTED
-    int* initializeIndicies(int x1, int y1){
-        int x2, y2, xdiff, ydiff, xdiff_pow, ydiff_pow, distance;
+    //Tested and working.
+    void initializeIndicies(int x1, int y1){
+        double x2, y2, xdiff, ydiff, xdiff_pow, ydiff_pow, distance;
         point1 = 0;
         point2 = 0;
         point1_distance = numeric_limits<int>::max();
         point2_distance = numeric_limits<int>::max();
         
         int i = 0;
-        while(track[i][0] != 0 && i < sizeof(track)){
-            x2 = track[i][0];
-            y2 = track[i][1];
+        while(((track[i][0] != 0) || (track [i][1] != 0)) && (i < sizeof(track))){
+            x2 = (double)track[i][0];
+            y2 = (double)track[i][1];
             
-            xdiff = x2 - x1;
-            ydiff = y2 - y1;
+            xdiff = x2 - (double)x1;
+            ydiff = y2 - (double)y1;
             
             xdiff_pow = xdiff * xdiff;
             ydiff_pow = ydiff * ydiff;
             
-            distance = (int)sqrt((double)(xdiff_pow + ydiff_pow));
+            distance = sqrt(xdiff_pow + ydiff_pow);
+            cout << "Distance between points: " << distance << '\n';
             
             if(distance < point1_distance){
                 point2_distance = point1_distance;
                 point2 = point1;
                 
-                point1_distance = distance;
+                point1_distance = (int)distance;
                 point1 = i;
             }
-            else if(distance < point2_distance){
-                point2_distance = distance;
+            else if(distance < point2_distance || point1 == point2){
+                point2_distance = (int)distance;
                 point2 = i;
             }
             i++;
         }
-    }
-    
-    /**
-    * Multplies 2 vectors.
-    * Arguments: vec1, vec2 as int[x,y].
-    * Returns a pointer to the resulting vector int[x,y].
-    */
-    int* multiplyVectors(int* vec1, int* vec2){
-        
+        return;
     }
     
     /**
@@ -106,7 +107,9 @@
     * Function projects vec2_first onto vec1_first.
     * Returns pointer to the resulting vector, int[x_res, y_res]
     */
-    //NOT YET TESTED 
+    
+    //Tested and working. Need to fix so the distance can be negative
+    //depending on the direction of the car. 
     double calculateDistance(int* vec2_first, int* vec1_first){
         //Maybe add exceptions for accessing arrays
         int vec1[2], vec2[2];
@@ -190,6 +193,7 @@
     * Rows in Data.txt has the format:
     *   int:x int:y
     */
+    //Tested and working
     void loadTrack(){
         string line;
         ifstream datafile;
@@ -283,94 +287,9 @@
         
         loadTrack();
         
-        //1:st vector test.
-        double testResult;
-        int testVec2[4] = {1,5,1,3};
-        int testVec1[4] = {1,6,1,1};
-        try{
-            testResult = calculateDistance(&testVec2[0], &testVec1[0]);
-        }
-        catch(int e){
-            cout << "Exception occured, nr: " << e << '\n';
-            cout << "One of the arguments were 0" << '\n';
-        }
-        cout << "Distance1: " << testResult << '\n' << '\n';
-        
-        //2:nd vector test.
-        double testResult2;
-        int testVec4[4] = {0,3,0,0};
-        int testVec3[4] = {0,7,0,5};
-        try{
-            testResult2 = calculateDistance(&testVec4[0], &testVec3[0]);
-        }
-        catch(int e){
-            cout << "Exception occured, nr: " << e << '\n';
-            cout << "One of the arguments were 0" << '\n';
-        }
-        cout << "Distance2: " << testResult2 << '\n' << '\n';
-        
-        //3:rd vector test.
-        double testResult3;
-        int testVec6[4] = {-2,1,1,1};
-        int testVec5[4] = {-2,5,1,6};
-        try{
-            testResult3 = calculateDistance(&testVec6[0], &testVec5[0]);
-        }
-        catch(int e){
-            cout << "Exception occured, nr: " << e << '\n';
-            cout << "One of the arguments were 0" << '\n';
-        }
-        cout << "Distance3 (same as 2): " << testResult3 << '\n' << '\n';
-        
-        //4:th vector test.
-        double testResult4;
-        int testVec8[4] = {0,0,0,0};
-        int testVec7[4] = {0,5,0,0};
-        try{
-            testResult4 = calculateDistance(&testVec8[0], &testVec7[0]);
-        }
-        catch(int e){
-            cout << "Exception occured, nr: " << e << '\n';
-            cout << "One of the arguments were 0" << '\n';
-        }
-        cout << "Distance4: " << testResult4 << '\n' << '\n';
-        
-        //5:th vector test.
-        double testResult5;
-        int testVec10[4] = {0,5,0,0};
-        int testVec9[4] = {0,0,0,0};
-        try{
-            testResult5 = calculateDistance(&testVec10[0], &testVec9[0]);
-        }
-        catch(int e){
-            cout << "Exception occured, nr: " << e << '\n';
-            cout << "One of the arguments were 0" << '\n';
-        }
-        cout << "Distance5: " << testResult5 << '\n' << '\n';
-        
-        //6th vector test.
-        double testResult6;
-        int testVec12[4] = {0,5,0,0};
-        int testVec11[4] = {0,0,0,0};
-        try{
-            testResult6 = calculateDistance(&testVec12[0], &testVec11[0]);
-        }
-        catch(int e){
-            cout << "Exception occured, nr: " << e << '\n';
-            cout << "One of the arguments were 0" << '\n';
-        }
-        cout << "Distance6: " << testResult6 << '\n' << '\n';
-        
-        
-        
-        
         int count = 0;
     
         while (ros::ok()){
-            /**
-            * This is a message object. You stuff it with data, and then publish it.
-            */
-            
             if(count < 6) {
                 std_msgs::Float64 msg;
                 
@@ -382,12 +301,6 @@
                 
                 ROS_INFO("%.2f", msg.data);
                 
-                /**
-                * The publish() function is how you send messages. The parameter
-                * is the message object. The type of this object must agree with the type
-                * given as a template parameter to the advertise<>() call, as was done
-                in the constructor above.
-                */
                 database_pub.publish(msg);
                 
                 usleep(3000000);
