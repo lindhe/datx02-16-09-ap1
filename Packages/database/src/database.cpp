@@ -105,30 +105,32 @@
     }
     
     /**
-    * Arguments (vectors) on the form int[x_begin, x_end, y_begin, y_end].
-    * Function projects vec2_first onto vec1_first.
-    * Returns pointer to the resulting vector, int[x_res, y_res]
+    * Arguments on the form int[coordinate_x, coordinate_y].
+    * Function calculates the shortest distance from the car to
+    * a line drawn between the 2 points on the track.
+    *
+    * Returns the distance as a double;
     */
     
     //Tested and working. Need to fix so the distance can be negative
     //depending on the direction of the car. 
-    double calculateDistance(int* vec2_first, int* vec1_first){
+    double calculateDistance(int* first_point, int* next_point, int* car_point){
         //Maybe add exceptions for accessing arrays
         int vec1[2], vec2[2];
         double res_vec[2];
         int x1_begin, x1_end, y1_begin, y1_end;
         int x2_begin, x2_end, y2_begin, y2_end;
         
-        //Move vectors to origo and represent them as [x,y]
-        x1_begin = vec1_first[0];
-        x1_end = vec1_first[1];
-        y1_begin = vec1_first[2];
-        y1_end = vec1_first[3];
+        //Create vectors, move them to origo and represent them as [x,y]
+        x1_begin = first_point[0];
+        x1_end = next_point[0];
+        y1_begin = first_point[1];
+        y1_end = next_point[1];
         
-        x2_begin = vec2_first[0];
-        x2_end = vec2_first[1];
-        y2_begin = vec2_first[2];
-        y2_end = vec2_first[3];
+        x2_begin = first_point[0];
+        x2_end = car_point[0];
+        y2_begin = first_point[1];
+        y2_end = car_point[1];
         
         //Vector 1
         vec1[0] = x1_end - x1_begin;
@@ -142,6 +144,7 @@
         
         cout << "Vector 2: [" << vec2[0] << "," << vec2[1] << "]" << '\n'; 
         
+        //Throw exception if one of the vectors are 0 in lenght.
         if((vec1[0] == 0 && vec1[1] == 0) || (vec2[0] == 0 && vec2[1] == 0)){
             throw 666;
             return 0.0;
@@ -295,6 +298,16 @@
         */
         
         loadTrack();
+        
+        //Test new calculateDistance();
+        int testpoint1[2] = {2,-1};
+        int testpoint2[2] = {7,-1};
+        int testcarpoint[2] = {6,1};
+        double testResult;
+        
+        testResult = calculateDistance(&testpoint1[0], &testpoint2[0], &testcarpoint[0]);
+        
+        cout << "Resulting distance: " << testResult << '\n';
         
         int count = 0;
     
