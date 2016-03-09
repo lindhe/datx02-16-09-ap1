@@ -3,6 +3,8 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
 #include "ackermann_msgs/AckermannDrive.h"
+//Comment out when gulliview_server is compiled
+//#include "gulliview_server/Pos.h"
 
 #include <iostream>
 #include <fstream>
@@ -228,6 +230,13 @@
         ROS_INFO("I heard: [%.2f]", msg->data);
     }
 
+/*    //Template to use the position from gulliview 
+    void callback(const gulliview_server::Pos& msg){
+        ROS_INFO("I heard: x = %lld", msg.x);
+        ROS_INFO("I heard: y = %lld", msg.y);
+        ROS_INFO("I heard: heading = %lld", msg.heading);
+    }
+*/
     int main(int argc, char **argv){
 
         /**
@@ -276,7 +285,7 @@
         ros::Publisher database_pub = n.advertise<std_msgs::Float64>("control_error", 1000);
         
         //Update the name of topic
-        ros::Subscriber database_sub = n.subscribe("name_of_topic",1000,callback);
+        ros::Subscriber database_sub = n.subscribe("position",1000,callback);
         
         ros::Rate loop_rate(10);
         
