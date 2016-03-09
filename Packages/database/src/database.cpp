@@ -60,6 +60,63 @@
     */
     
     /**
+    * Function for updating pointers to the closest points on the track.
+    * Argument is on the form int[x,y,heading]
+    */
+    void updateIndicies(int* carVector){
+        //Maybe add error handling if array is too small or too big.
+        int car_coordinate_x, car_coordinate_y, car_heading;
+        car_coordinate_x = carVector[0];
+        car_coordinate_y = carVector[1];
+        car_heading = carVector[2];
+        
+        //Calculate orthogonal projection. If projected vector is
+        //almost as long (marginal needs to be decided), the current points
+        //are updated with the next points on the track.
+    }
+    
+    /**
+    * Function that projects one vector onto another and returns the
+    * resulting vector.
+    * Arguments: pointers to 2 vectors on the form; int[x,y].
+    * vec2 is projected on to vec1. res_vec is the vector variable
+    * that should store the result, also on form int[x,y].
+    */
+    
+    //Tested and working!
+    void orthogonalProjection(int* vec2, int* vec1, double* res_vec){
+        int numerator, denominator, product1, product2;
+        double numerator2, denominator2, result, product3, product4;
+        
+        product1 = vec2[0] * vec1[0];
+        product2 = vec2[1] * vec1[1];
+        numerator = product1 + product2;
+        
+        cout << "Numerator: " << numerator << '\n';
+        
+        product1 = vec1[0] * vec1[0];
+        product2 = vec1[1] * vec1[1];
+        denominator = product1 + product2;
+        
+        cout << "Denominator: " << denominator << '\n';
+        
+        numerator2 = (double)numerator;
+        denominator2 = (double)denominator;
+        
+        result = numerator2 / denominator2;
+        
+        cout << "Vector to scale: [" << vec1[0] << "," << vec1[1] << "]" << '\n';
+        cout << "Result: " << result << '\n';
+        
+        res_vec[0] = (double)vec1[0] * result;
+        res_vec[1] = (double)vec1[1] * result;
+        
+        cout << "Projected vector: [" << res_vec[0] << "," << res_vec[1] << "]" << '\n'; 
+        
+        return;
+    }
+    
+    /**
     * Function for initializing track pointers
     * Argument: Position of the car
     * Returns: Array of indicies to coordinates in track. 
@@ -145,42 +202,21 @@
         cout << "Vector 2: [" << vec2[0] << "," << vec2[1] << "]" << '\n'; 
         
         //Throw exception if one of the vectors are 0 in lenght.
-        if((vec1[0] == 0 && vec1[1] == 0) || (vec2[0] == 0 && vec2[1] == 0)){
+        if(vec1[0] == 0 && vec1[1] == 0){
             throw 666;
             return 0.0;
         }
         
+        if(vec2[0] == 0 && vec2[0] == 0){
+            return 0.0;
+        }
+        
         //Project Vector 2 onto Vector 1
-        int numerator, denominator, product1, product2;
-        double numerator2, denominator2, result, product3, product4;
-        
-        product1 = vec2[0] * vec1[0];
-        product2 = vec2[1] * vec1[1];
-        numerator = product1 + product2;
-        
-        cout << "Numerator: " << numerator << '\n';
-        
-        product1 = vec1[0] * vec1[0];
-        product2 = vec1[1] * vec1[1];
-        denominator = product1 + product2;
-        
-        cout << "Denominator: " << denominator << '\n';
-        
-        numerator2 = (double)numerator;
-        denominator2 = (double)denominator;
-        
-        result = numerator2 / denominator2;
-        
-        cout << "Vector to scale: [" << vec1[0] << "," << vec1[1] << "]" << '\n';
-        cout << "Result: " << result << '\n';
-        
-        res_vec[0] = (double)vec1[0] * result;
-        res_vec[1] = (double)vec1[1] * result;
-        
-        cout << "Projected vector: [" << res_vec[0] << "," << res_vec[1] << "]" << '\n'; 
+        orthogonalProjection(&vec2[0], &vec1[0], &res_vec[0]);
+        cout << "Resulting vector: " << "[" << res_vec[0] << "," << res_vec[1] << "]" << '\n';
         
         //Calculate distance
-        double sum1, sum2, result2, distance;
+        double sum1, sum2, result2, distance, product3, product4;
         
         sum1 = vec2[0] - res_vec[0];
         sum2 = vec2[1] - res_vec[1];
@@ -300,13 +336,16 @@
         loadTrack();
         
         //Test new calculateDistance();
-        int testpoint1[2] = {2,-1};
-        int testpoint2[2] = {7,-1};
-        int testcarpoint[2] = {6,1};
+        int testpoint1[2] = {0,0};
+        int testpoint2[2] = {5,0};
+        int testcarpoint[2] = {4,2};
         double testResult;
-        
-        testResult = calculateDistance(&testpoint1[0], &testpoint2[0], &testcarpoint[0]);
-        
+        try{
+            testResult = calculateDistance(&testpoint1[0], &testpoint2[0], &testcarpoint[0]);
+        }
+        catch(int e){
+            cout << "Exception caught! No distance between checkpoints" << '\n';
+        }
         cout << "Resulting distance: " << testResult << '\n';
         
         int count = 0;
