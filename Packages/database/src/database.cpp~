@@ -51,52 +51,6 @@
     
     //-------------------------------End---------------------------
     
-    
-    
-    /**
-    * TODO: Write function for calculating the distance from
-    * the car to the 2 closest checkpoints, and switching pointers
-    * to next checkpoint when one is passed.
-    */
-    
-    /**
-    * Function for updating pointers to the closest points on the track.
-    * Argument is on the form int[x,y,heading].
-    * Updates the current points to aim for on the track
-    * - global variables point1 and point2 - if the current points are reached
-    * or unreachable
-    */
-    void updateIndicies(int* car_information){
-        //Maybe add error handling if array is too small or too big.
-        int car_coordinate_x, car_coordinate_y, car_heading;
-        int track_vector[2], car_vector[2];
-        double car_projection[2];
-        
-        car_coordinate_x = car_information[0];
-        car_coordinate_y = car_information[1];
-        car_heading = car_information[2];
-        
-        //Create vector from point 1 to point 2.
-        track_vector[0] = track[point2][0] - track[point1][0];
-        track_vector[1] = track[point2][1] - track[point1][1];
-        
-        //Create vector from point 1 to position of car.
-        car_vector[0] = car_coordinate_x - track[point1][0];
-        car_vector[1] = car_coordinate_y - track[point1][1];
-        
-        cout << "Track Vector: " << "[" << track_vector[0] << ","
-                << track_vector[1] << "]" << '\n';
-        cout << "Car Vector: " << "[" << car_vector[0] << ","
-                << car_vector[1] << "]" << '\n';
-        
-        
-        
-        //Calculate orthogonal projection. If projected vector is
-        //almost as long (marginal needs to be decided), the current points
-        //are updated with the next points on the track.
-        
-    }
-    
     /**
     * Function that projects one vector onto another and returns the
     * resulting vector.
@@ -138,6 +92,97 @@
                 << res_vec[1] << "]" << '\n'; 
         
         return;
+    }
+    
+    /**
+    * Arguments on the form int[x,y]. vec1 is the track vector,
+    * and vec2 is the car vector. 
+    * Function calculates the shortest distance from the car to
+    * the track vector.
+    *
+    * Returns the distance as a double;
+    */
+    
+    //Tested and working. Need to fix so the distance can be negative
+    //depending on the direction of the car. 
+    double calculateDistance(int* vec1, int* vec2){
+        //Maybe add exceptions for accessing arrays
+        double res_vec[2];
+        
+        //Throw exception if track vector is 0 in lenght.
+        if(vec1[0] == 0 && vec1[1] == 0){
+            throw 666;
+            return 0.0;
+        }
+        
+        if(vec2[0] == 0 && vec2[0] == 0){
+            return 0.0;
+        }
+        
+        //Project Vector 2 onto Vector 1
+        orthogonalProjection(&vec2[0], &vec1[0], &res_vec[0]);
+        cout << "Resulting vector: " << "[" << res_vec[0] << ","
+                << res_vec[1] << "]" << '\n';
+        
+        //Calculate distance
+        double sum1, sum2, result2, distance, product3, product4;
+        
+        sum1 = vec2[0] - res_vec[0];
+        sum2 = vec2[1] - res_vec[1];
+        
+        product3 = sum1 * sum1;
+        product4 = sum2 * sum2;
+        
+        result2 = sqrt(product3 + product4);
+        
+        return result2;
+    }
+    
+    /**
+    * Function for updating pointers to the closest points on the track.
+    * Argument is on the form int[x,y,heading].
+    * Updates the current points to aim for on the track
+    * - global variables point1 and point2 - if the current points are reached
+    * or "unreachable".
+    */
+    void updateIndicies(int* car_information){
+        //Maybe add error handling if array is too small or too big.
+        int car_coordinate_x, car_coordinate_y, car_heading;
+        int track_vector[2], car_vector[2];
+        double car_projection[2];
+        
+        car_coordinate_x = car_information[0];
+        car_coordinate_y = car_information[1];
+        car_heading = car_information[2];
+        
+        //Create vector from point 1 to point 2.
+        track_vector[0] = track[point2][0] - track[point1][0];
+        track_vector[1] = track[point2][1] - track[point1][1];
+        
+        //Create vector from point 1 to position of car.
+        car_vector[0] = car_coordinate_x - track[point1][0];
+        car_vector[1] = car_coordinate_y - track[point1][1];
+        
+        cout << "Track Vector: " << "[" << track_vector[0] << ","
+                << track_vector[1] << "]" << '\n';
+        cout << "Car Vector: " << "[" << car_vector[0] << ","
+                << car_vector[1] << "]" << '\n';
+        
+        orthogonalProjection(&car_vector[0], &track_vector[0],
+                &car_projection[0]);
+        
+        cout << "Car Projection Vector: " << "[" << car_projection[0] << ","
+                << car_projection[1] << "]" << '\n';
+        
+        double res;
+        res = calculateDistance(&track_vector[0], &car_vector[0]);
+        
+        cout << "Distance from car to track: " << res << '\n';
+        
+        //Calculate orthogonal projection. If projected vector is
+        //almost as long (marginal needs to be decided), the current points
+        //are updated with the next points on the track.
+        
     }
     
     /**
@@ -200,75 +245,6 @@
                 << track[point2][1] << "]" << '\n';
         
         return;
-    }
-    
-    /**
-    * Arguments on the form int[coordinate_x, coordinate_y].
-    * Function calculates the shortest distance from the car to
-    * a line drawn between the 2 points on the track.
-    *
-    * Returns the distance as a double;
-    */
-    
-    //Tested and working. Need to fix so the distance can be negative
-    //depending on the direction of the car. 
-    double calculateDistance(int* first_point, int* next_point, int* car_point){
-        //Maybe add exceptions for accessing arrays
-        int vec1[2], vec2[2];
-        double res_vec[2];
-        int x1_begin, x1_end, y1_begin, y1_end;
-        int x2_begin, x2_end, y2_begin, y2_end;
-        
-        //Create vectors, move them to origo and represent them as [x,y]
-        x1_begin = first_point[0];
-        x1_end = next_point[0];
-        y1_begin = first_point[1];
-        y1_end = next_point[1];
-        
-        x2_begin = first_point[0];
-        x2_end = car_point[0];
-        y2_begin = first_point[1];
-        y2_end = car_point[1];
-        
-        //Vector 1
-        vec1[0] = x1_end - x1_begin;
-        vec1[1] = y1_end - y1_begin;
-        
-        cout << "Vector 1: [" << vec1[0] << "," << vec1[1] << "]" << '\n'; 
-        
-        //Vector 2
-        vec2[0] = x2_end - x2_begin;
-        vec2[1] = y2_end - y2_begin;
-        
-        cout << "Vector 2: [" << vec2[0] << "," << vec2[1] << "]" << '\n'; 
-        
-        //Throw exception if one of the vectors are 0 in lenght.
-        if(vec1[0] == 0 && vec1[1] == 0){
-            throw 666;
-            return 0.0;
-        }
-        
-        if(vec2[0] == 0 && vec2[0] == 0){
-            return 0.0;
-        }
-        
-        //Project Vector 2 onto Vector 1
-        orthogonalProjection(&vec2[0], &vec1[0], &res_vec[0]);
-        cout << "Resulting vector: " << "[" << res_vec[0] << ","
-                << res_vec[1] << "]" << '\n';
-        
-        //Calculate distance
-        double sum1, sum2, result2, distance, product3, product4;
-        
-        sum1 = vec2[0] - res_vec[0];
-        sum2 = vec2[1] - res_vec[1];
-        
-        product3 = sum1 * sum1;
-        product4 = sum2 * sum2;
-        
-        result2 = sqrt(product3 + product4);
-        
-        return result2;
     }
     
     /**
@@ -379,7 +355,7 @@
         loadTrack();
         
         //Test new calculateDistance();
-        int car_testvector[3] = {3,-5,0};
+        int car_testvector[3] = {5,-6,0};
         
         initializeIndicies(car_testvector[0], car_testvector[1]);
         
