@@ -37,7 +37,7 @@ class DatabaseHandler{
         * Initialized to 0. Change in case we need coordinates with zeros
         *
         */
-        int track[20][2] = {0};
+        int track[20][2];
         
         /**
         *  Index in array "track" to the 2 closest points to the car.
@@ -61,7 +61,15 @@ class DatabaseHandler{
                 database_pub = n.advertise<std_msgs::Float64>("control_error", 1000);
         
                 database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
+                
+                for(int i = 0; i < 20; i++){
+                    track[i][0] = 0;
+                    track[i][1] = 0;
+                }
+                
                 loadTrack();
+                
+                
         }
 
         /**
@@ -189,7 +197,7 @@ class DatabaseHandler{
             //are updated with the next points on the track.
             orthogonalProjection(&car_vector[0], &track_vector[0],
                                     &car_projection[0]);                     
-            
+            cout << "Orthogonal Projection Vector: [" << car_projection[0] << "," << car_projection[1] << "]" << '\n';
             double lenght_of_track_vector;
             double length_of_projection_vector;
             double origo[2] = {0,0};
@@ -205,7 +213,7 @@ class DatabaseHandler{
             //and if the projection vector is pointing in the same direction as
             //the track vector.
             
-            if((lenght_of_track_vector - length_of_projection_vector) <= 1 &&
+            if((lenght_of_track_vector - length_of_projection_vector) <= 400 &&
                     ((track_double[0] * car_projection[0] > 0) ||
                     track_double[1] * car_projection[1] > 0)){
                 //Wrap around
@@ -321,7 +329,7 @@ class DatabaseHandler{
             ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
             int x, y, heading;
             int car_coordinates[2], track_vector[2], car_vector[2];
-            double car_point[2], track_point[2], origo_point[2];
+            double car_point[2], track_point[2], origo_point[2], orth_proj[2];
             double distance_to_car, origo_to_car, origo_to_track;
             float error;
             x = (int)msg.x;
@@ -338,6 +346,9 @@ class DatabaseHandler{
             car_coordinates[1] = y;
             updateIndicies(&car_coordinates[0]);
             
+            cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
+            cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
+            
             //Create a vector from closest point on the track to the car,
             //and one from closest point on the track to the next point on
             //the track.
@@ -345,7 +356,7 @@ class DatabaseHandler{
             car_vector[1] = y - track[point1][1];
             
             track_vector[0] = track[point2][0] - track[point1][0];
-            track_vector[1] = track[point2][1] - track[point1][0];
+            track_vector[1] = track[point2][1] - track[point1][1];
             
             //Calculate distance between the car and the track
             distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]);
@@ -357,12 +368,23 @@ class DatabaseHandler{
             track_point[0] = (double)track[point1][0];
             track_point[1] = (double)track[point1][1];
             
+            //Untested---------------------------------------------------------
+            orthogonalProjection(&car_vector[0], &track_vector[0], &orth_proj[0]);
+            
+            track_point[0] = track_point[0] + orth_proj[0];
+            track_point[1] = track_point[1] + orth_proj[1];
+            
             origo_point[0] = 0;
             origo_point[1] = 0;
+            
             
             origo_to_car = distanceBetweenPoints(&car_point[0], &origo_point[0]);
             origo_to_track = distanceBetweenPoints(&track_point[0],
                                 &origo_point[0]);
+                                
+            //-----------------------------------------------------------------
+            
+            
             //Calculate if negative or positive distance
             //Negative if right side of car, positive if left.
             if(origo_to_car > origo_to_track){
