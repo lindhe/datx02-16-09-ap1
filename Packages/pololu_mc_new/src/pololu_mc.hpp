@@ -16,7 +16,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-//#include "sensor_msgs/Range.h"
+#include "sensor_msgs/Range.h"
 #include "ackermann_msgs/AckermannDrive.h"
 #include "pololu_mc/MCValues.h"
 
@@ -27,7 +27,7 @@
 #include "Serial.hpp"
 #include "utils.hpp"
 
-//#define USS_RANGE 0.5
+#define USS_RANGE 0.5
 #define MIN_CURRENT 1.2
 #define MAX_CURRENT 6
 #define MIN_RPM 3500
@@ -52,6 +52,7 @@ ros::Publisher mc_values_pub;
 float current_steering_angle;
 float current_speed;
 float prev_speed;
+float us_sensor0;
+float us_sensor1;
 bool emergency;
-static float control_effort;
-uint16_t position;
+
