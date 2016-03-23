@@ -58,7 +58,7 @@ class DatabaseHandler{
          * Constructor to initialize the publisher/subscriber and load the track
          */
         DatabaseHandler(){
-                database_pub = n.advertise<std_msgs::Float64>("control_error", 1000);
+                database_pub = n.advertise<std_msgs::Float64>("path_error", 1000);
         
                 database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
                 
@@ -213,7 +213,7 @@ class DatabaseHandler{
             //and if the projection vector is pointing in the same direction as
             //the track vector.
             
-            if((lenght_of_track_vector - length_of_projection_vector) <= 400 &&
+            if((lenght_of_track_vector - length_of_projection_vector) <= 50 &&
                     ((track_double[0] * car_projection[0] > 0) ||
                     track_double[1] * car_projection[1] > 0)){
                 //Wrap around
@@ -387,7 +387,7 @@ class DatabaseHandler{
             
             //Calculate if negative or positive distance
             //Negative if right side of car, positive if left.
-            if(origo_to_car > origo_to_track){
+            if(origo_to_car < origo_to_track){
                 distance_to_car = distance_to_car * -1;
             }
             
