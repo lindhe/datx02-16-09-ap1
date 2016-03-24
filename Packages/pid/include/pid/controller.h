@@ -80,9 +80,9 @@ double c=1.;
 double tan_filt = 1.;
 
 // Upper and lower saturation limits
-double upper_limit =  1000.;
-double lower_limit = -1000.; 
-double windup_limit = 1000.; // Anti-windup term. Limits the absolute value of the integral term.
+double upper_limit =  1100.;
+double lower_limit = -1100.; 
+double windup_limit = 200.; // Anti-windup term. Limits the absolute value of the integral term.
 
 std::vector<double> error(3);
 std::vector<double> filtered_error(3);
@@ -94,7 +94,7 @@ int loop_counter = 0; // Counts # of times through the control loop. Used to sta
 ros::Publisher control_effort_pub;
 
 std::string topic_from_controller;
-std::string setpoint_topic;
+std::string path_error;
 std::string node_name = "pid_node";
 
 ackermann_msgs::AckermannDrive control_msg;

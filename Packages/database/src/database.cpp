@@ -214,7 +214,7 @@ class DatabaseHandler{
             //and if the projection vector is pointing in the same direction as
             //the track vector.
             
-            if((lenght_of_track_vector - length_of_projection_vector) <= 50 &&
+            if((lenght_of_track_vector - length_of_projection_vector) <= 100 &&
                     ((track_double[0] * car_projection[0] > 0) ||
                     track_double[1] * car_projection[1] > 0)){
                 //Wrap around
@@ -415,7 +415,7 @@ class DatabaseHandler{
             ref_point[1] = 0;
             next_point[0] = (double)track[point2][0] - car_point[0];
             next_point[1] = (double)track[point2][1] - car_point[1];
-            double length_track = sqrt(pow(track_point[0],2) + pow(track_point[1],2));
+            double length_track = sqrt(pow(next_point[0],2) + pow(next_point[1],2));
             result_point[0] = next_point[0]/length_track; 
             result_point[1] = next_point[1]/length_track;
             double dotproduct = inner_product(result_point.begin(), result_point.end(), ref_point.begin(), 0.0);
@@ -425,7 +425,20 @@ class DatabaseHandler{
             }
                         
             cout << "Angle car_point: " << angle << endl;
-
+            
+            wanted_heading = angle - heading;
+            
+            if(abs((int)(angle-heading)) > 180){
+                if(angle > heading){
+                    wanted_heading = wanted_heading - 360;
+                }
+                else{
+                    wanted_heading = 360 - wanted_heading;
+                }
+            }
+            
+            cout << "WANTED HEADING: " << wanted_heading << endl;
+            
             std_msgs::Float64 path_error;
 
             path_error.data = (float)wanted_heading;
