@@ -10,6 +10,7 @@
 #include <istream>
 #include <sstream>
 #include <cmath>
+#include <numeric>
 
 using namespace std;
 
@@ -361,10 +362,9 @@ class DatabaseHandler{
             
             //Calculate distance between the car and the track
             distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]);
-            
-            car_point[0] = (double)x;
-            car_point[1] = (double)y;
-            
+            car_point[0] = (double)x; 
+            car_point[1] = (double)y; 
+             
             //Old code, uncomment if new does not work.
             
             //Check which side of the circular track the car is on
@@ -384,7 +384,7 @@ class DatabaseHandler{
             origo_to_track = distanceBetweenPoints(&track_point[0],
                                 &origo_point[0]);
             */
-            
+            /* 
             //Calculate angle of vector pointing from car to next point
             track_point[0] = (double)track[point2][0] - car_point[0];
             track_point[1] = (double)track[point2][1] - car_point[1];
@@ -404,9 +404,27 @@ class DatabaseHandler{
                 wanted_heading = wanted_heading - 360;
             }
             
-            
+            */
             
             //car_error = (float) distance_to_car;
+
+            vector<double> ref_point(2);       
+            vector<double> next_point(2);       
+            vector<double> result_point(2);       
+            ref_point[0] = 1;
+            ref_point[1] = 0;
+            next_point[0] = (double)track[point2][0] - car_point[0];
+            next_point[1] = (double)track[point2][1] - car_point[1];
+            double length_track = sqrt(pow(track_point[0],2) + pow(track_point[1],2));
+            result_point[0] = next_point[0]/length_track; 
+            result_point[1] = next_point[1]/length_track;
+            double dotproduct = inner_product(result_point.begin(), result_point.end(), ref_point.begin(), 0.0);
+            double angle = acos(dotproduct) * 180.0 / 3.14159265; 
+            if(next_point[1] < 0){
+                angle = 360.0 - angle;
+            }
+                        
+            cout << "Angle car_point: " << angle << endl;
 
             std_msgs::Float64 path_error;
 
