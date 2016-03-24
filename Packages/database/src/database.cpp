@@ -331,6 +331,7 @@ class DatabaseHandler{
             int car_coordinates[2], track_vector[2], car_vector[2];
             double car_point[2], track_point[2], origo_point[2], orth_proj[2];
             double distance_to_car, origo_to_car, origo_to_track;
+            double division, wanted_heading;
             float error;
             x = (int)msg.x;
             y = (int)msg.y;
@@ -361,14 +362,16 @@ class DatabaseHandler{
             //Calculate distance between the car and the track
             distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]);
             
-            //Check which side of the circular track the car is on
             car_point[0] = (double)x;
             car_point[1] = (double)y;
             
+            //Old code, uncomment if new does not work.
+            
+            //Check which side of the circular track the car is on
+            /*
             track_point[0] = (double)track[point1][0];
             track_point[1] = (double)track[point1][1];
             
-            //Untested---------------------------------------------------------
             orthogonalProjection(&car_vector[0], &track_vector[0], &orth_proj[0]);
             
             track_point[0] = track_point[0] + orth_proj[0];
@@ -377,27 +380,39 @@ class DatabaseHandler{
             origo_point[0] = 0;
             origo_point[1] = 0;
             
-            
             origo_to_car = distanceBetweenPoints(&car_point[0], &origo_point[0]);
             origo_to_track = distanceBetweenPoints(&track_point[0],
                                 &origo_point[0]);
-                                
-            //-----------------------------------------------------------------
+            */
             
+            //Calculate angle of vector pointing from car to next point
+            track_point[0] = (double)track[point2][0] - car_point[0];
+            track_point[1] = (double)track[point2][1] - car_point[1];
             
-            //Calculate if negative or positive distance
-            //Negative if right side of car, positive if left.
-            if(origo_to_car < origo_to_track){
-                distance_to_car = distance_to_car * -1;
+            division = track_point[1]/track_point[0];
+            
+            wanted_heading = atan(division)*180/3.141593;
+            cout << "Angle car_point: " << wanted_heading << endl;
+
+            if(car_point[1] > track_point[1]){
+                wanted_heading = 360 - wanted_heading;
             }
             
-//            car_error = (float) distance_to_car;
+            //Calculate if negative or positive angle
+            //Negative if turning right, positive if left.
+            if(wanted_heading > 180){
+                wanted_heading = wanted_heading - 360;
+            }
+            
+            
+            
+            //car_error = (float) distance_to_car;
 
             std_msgs::Float64 path_error;
 
-            path_error.data = (float) distance_to_car;
+            path_error.data = (float)wanted_heading;
 
-            ROS_INFO("%.2f", path_error.data);
+            ROS_INFO("Angle error: %.2f", path_error.data);
 
             database_pub.publish(path_error);
 
