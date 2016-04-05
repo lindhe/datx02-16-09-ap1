@@ -44,7 +44,7 @@
 
 void setpoint_callback(const std_msgs::Float64& setpoint_msg)
 {
-  control_error = setpoint_msg.data*10;
+  control_error = setpoint_msg.data;//10;
 
   ROS_INFO("control error: %f", control_error);
 
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 {
   ROS_INFO("Starting pid with node name %s", node_name.c_str());
 
-  Kp = 2, Ki = 0; Kd = 0;	//for testing
+  Kp = 15, Ki = 0; Kd = 25;	//for testing
 
   // Initialize ROS stuff
   ros::init(argc, argv, node_name);     // Note node_name can be overidden by launch file

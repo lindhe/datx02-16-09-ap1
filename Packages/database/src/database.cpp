@@ -38,7 +38,7 @@ class DatabaseHandler{
         * Initialized to 0. Change in case we need coordinates with zeros
         *
         */
-        int track[20][2];
+        int track[240][2];
         
         /**
         *  Index in array "track" to the 2 closest points to the car.
@@ -173,14 +173,19 @@ class DatabaseHandler{
         */
         
         //Tested and working!
-        void updateIndicies(int* car_information){
+        double updateIndicies(int* car_information, int car_heading){
             //Maybe add error handling if array is too small or too big.
             int car_coordinate_x, car_coordinate_y;
             int track_vector[2], car_vector[2];
-            double car_projection[2], track_double[2];
+            double car_projection[2], track_double[2], car_point[2];
+            double heading, wanted_heading;
             
             car_coordinate_x = car_information[0];
             car_coordinate_y = car_information[1];
+            
+            car_point[0] = (double)car_coordinate_x; 
+            car_point[1] = (double)car_coordinate_y;
+            heading = (double)car_heading;
             
             //Create vector from point 1 to point 2.
             track_vector[0] = track[point2][0] - track[point1][0];
@@ -198,7 +203,8 @@ class DatabaseHandler{
             //are updated with the next points on the track.
             orthogonalProjection(&car_vector[0], &track_vector[0],
                                     &car_projection[0]);                     
-            cout << "Orthogonal Projection Vector: [" << car_projection[0] << "," << car_projection[1] << "]" << '\n';
+            cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
+                "," << car_projection[1] << "]" << '\n';
             double lenght_of_track_vector;
             double length_of_projection_vector;
             double origo[2] = {0,0};
@@ -213,30 +219,109 @@ class DatabaseHandler{
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
-            
-            if((lenght_of_track_vector - length_of_projection_vector) <= 100 &&
+            double length_track;
+            int skip = 0;
+            do{
+                //Loop until a segment of the track in front of the car is chosen.
+                //Do this only once.
+                while((lenght_of_track_vector - length_of_projection_vector) <= 20 &&
                     ((track_double[0] * car_projection[0] > 0) ||
-                    track_double[1] * car_projection[1] > 0)){
-                //Wrap around
-                if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
-                    point2 >= ((sizeof(track)/8) - 1)){
-                    point1 = point2;
-                    point2 = 0;
+                    (track_double[1] * car_projection[1] > 0)) &&
+                    !skip){
+                    //Wrap around
+                    if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                              point2 >= ((sizeof(track)/8) - 1)){
+                        point1 = point2;
+                        point2 = 0;
+                    }
+                    else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                               point1 >= ((sizeof(track)/8) - 1)){
+                        point1 = 0;
+                        point2 = 1;
+                    }
+                    else {
+                        point1 = point2;
+                        point2 = point2 + 1;
+                    }
+                    
+                    //Create vector from point 1 to point 2.
+                    track_vector[0] = track[point2][0] - track[point1][0];
+                    track_vector[1] = track[point2][1] - track[point1][1];
+                    
+                    track_double[0] = (double)track_vector[0];
+                    track_double[1] = (double)track_vector[1];
+                            
+                    //Create vector from point 1 to position of car.
+                    car_vector[0] = car_coordinate_x - track[point1][0];
+                    car_vector[1] = car_coordinate_y - track[point1][1];
+                    
+                    orthogonalProjection(&car_vector[0], &track_vector[0],
+                                             &car_projection[0]);                     
+                    
+                    
+                    lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                                &origo[0]);
+                    
+                    length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
+                                                    &origo[0]);
                 }
-                else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
-                    point1 >= ((sizeof(track)/8) - 1)){
-                    point1 = 0;
-                    point2 = 1;
+                if(skip == 1){
+                    //Wrap around
+                    if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                              point2 >= ((sizeof(track)/8) - 1)){
+                        point1 = point2;
+                        point2 = 0;
+                    }
+                    else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                               point1 >= ((sizeof(track)/8) - 1)){
+                        point1 = 0;
+                        point2 = 1;
+                    }
+                    else {
+                        point1 = point2;
+                        point2 = point2 + 1;
+                    }
                 }
-                else {
-                    point1 = point2;
-                    point2 = point2 + 1;
+                skip = 1;
+                vector<double> ref_point(2);       
+                vector<double> next_point(2);       
+                vector<double> result_point(2);       
+                ref_point[0] = 1;
+                ref_point[1] = 0;
+                next_point[0] = (double)track[point2][0] - car_point[0];
+                next_point[1] = (double)track[point2][1] - car_point[1];
+                length_track = sqrt(pow(next_point[0],2) + pow(next_point[1],2));
+                result_point[0] = next_point[0]/length_track; 
+                result_point[1] = next_point[1]/length_track;
+                double dotproduct = inner_product(result_point.begin(),
+                    result_point.end(), ref_point.begin(), 0.0);
+                double angle = acos(dotproduct) * 180.0 / 3.14159265; 
+                if(next_point[1] < 0){
+                    angle = 360.0 - angle;
                 }
-            return;
-            }
+                        
+                cout << "Angle car_point: " << angle << endl;
+                
+                wanted_heading = angle - heading;
+                
+                if(abs((int)(angle-heading)) > 180){
+                    if(angle > heading){
+                        wanted_heading = wanted_heading - 360;
+                    }
+                    else{
+                        wanted_heading = 360 + wanted_heading;
+                    }
+                }
+            
+                cout << "WANTED HEADING: " << wanted_heading << endl;
+                cout << "LENGTH_TRACK: " << length_track << endl;
+                
+            }while((wanted_heading < -45 || wanted_heading > 45 ||
+                    length_track < 400) &&
+                    length_track < 2000);
+            
+            return wanted_heading;
         }
-        
-        
         
         /**
         * Function for initializing track pointers
@@ -330,9 +415,10 @@ class DatabaseHandler{
             ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
             int x, y, heading;
             int car_coordinates[2], track_vector[2], car_vector[2];
-            double car_point[2], track_point[2], origo_point[2], orth_proj[2];
+            double track_point[2], origo_point[2], orth_proj[2];
+            double track_point1[2], track_point2[2], track_double[2];
             double distance_to_car, origo_to_car, origo_to_track;
-            double division, wanted_heading;
+            double division, wanted_heading, projection_vector, track_length;
             float error;
             x = (int)msg.x;
             y = (int)msg.y;
@@ -343,14 +429,6 @@ class DatabaseHandler{
                 initializeIndicies(x,y);
             }
             
-            //Update pointers to the track;
-            car_coordinates[0] = x;
-            car_coordinates[1] = y;
-            updateIndicies(&car_coordinates[0]);
-            
-            cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
-            cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
-            
             //Create a vector from closest point on the track to the car,
             //and one from closest point on the track to the next point on
             //the track.
@@ -360,11 +438,27 @@ class DatabaseHandler{
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
+            track_double[0] = (double)track_vector[0];
+            track_double[1] = (double)track_vector[1];
+            
+            track_point1[0] = (double)track[point1][0];
+            track_point1[1] = (double)track[point1][1];
+            
+            track_point2[0] = (double)track[point2][0];
+            track_point2[1] = (double)track[point2][2];
+            //Update pointers to the track. If the new pointers are
+            //still behind the car, update again.
+            car_coordinates[0] = x;
+            car_coordinates[1] = y;
+            
+            wanted_heading = updateIndicies(&car_coordinates[0], heading);
+            
+            cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
+            cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
+            
             //Calculate distance between the car and the track
-            distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]);
-            car_point[0] = (double)x; 
-            car_point[1] = (double)y; 
-             
+            distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]); 
+            
             //Old code, uncomment if new does not work.
             
             //Check which side of the circular track the car is on
@@ -407,37 +501,6 @@ class DatabaseHandler{
             */
             
             //car_error = (float) distance_to_car;
-
-            vector<double> ref_point(2);       
-            vector<double> next_point(2);       
-            vector<double> result_point(2);       
-            ref_point[0] = 1;
-            ref_point[1] = 0;
-            next_point[0] = (double)track[point2][0] - car_point[0];
-            next_point[1] = (double)track[point2][1] - car_point[1];
-            double length_track = sqrt(pow(next_point[0],2) + pow(next_point[1],2));
-            result_point[0] = next_point[0]/length_track; 
-            result_point[1] = next_point[1]/length_track;
-            double dotproduct = inner_product(result_point.begin(), result_point.end(), ref_point.begin(), 0.0);
-            double angle = acos(dotproduct) * 180.0 / 3.14159265; 
-            if(next_point[1] < 0){
-                angle = 360.0 - angle;
-            }
-                        
-            cout << "Angle car_point: " << angle << endl;
-            
-            wanted_heading = angle - heading;
-            
-            if(abs((int)(angle-heading)) > 180){
-                if(angle > heading){
-                    wanted_heading = wanted_heading - 360;
-                }
-                else{
-                    wanted_heading = 360 - wanted_heading;
-                }
-            }
-            
-            cout << "WANTED HEADING: " << wanted_heading << endl;
             
             std_msgs::Float64 path_error;
 
