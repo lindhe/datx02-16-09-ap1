@@ -42,9 +42,9 @@
 #include <dynamic_reconfigure/server.h>
 #include <ros/time.h>
 
-void setpoint_callback(const std_msgs::Float64& setpoint_msg)
+void path_error_callback(const std_msgs::Float64& path_error_msg)
 {
-  control_error = setpoint_msg.data;//10;
+  control_error = path_error_msg.data;//10;
 
   ROS_INFO("control error: %f", control_error);
 
@@ -78,10 +78,6 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
   // integrate the error
   error_integral += error.at(0) * delta_t.toSec();
 
-    ROS_INFO("error.at(0): %f", error.at(0));  //Debugging
-    ROS_INFO("delta_t.toSec(): %f", delta_t.toSec());  //Debugging
-    ROS_INFO("error_integral: %f", error_integral);  //Debugging
-
   // Apply windup limit to limit the size of the integral term
   if ( error_integral > fabsf(windup_limit))
     error_integral = fabsf(windup_limit);
@@ -108,15 +104,11 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
   filtered_error.at(1) = filtered_error.at(0); 
   filtered_error.at(0) = (1/(1+c*c+1.414*c))*(error.at(2)+2*error.at(1)+error.at(0)-(c*c-1.414*c+1)*filtered_error.at(2)-(-2*c*c+2)*filtered_error.at(1));
 
-    ROS_INFO("filtered_error.at(0): %f", filtered_error.at(0));  //Debugging
-
   // Take derivative of error
   // First the raw, unfiltered data:
   error_deriv.at(2) = error_deriv.at(1);
   error_deriv.at(1) = error_deriv.at(0);
   error_deriv.at(0) = (error.at(0)-error.at(1))/delta_t.toSec();
-
-    ROS_INFO("error_deriv.at(0): %f", error_deriv.at(0));  //Debugging
 
   filtered_error_deriv.at(2) = filtered_error_deriv.at(1);
   filtered_error_deriv.at(1) = filtered_error_deriv.at(0);
@@ -125,8 +117,6 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
     filtered_error_deriv.at(0) = (1/(1+c*c+1.414*c))*(error_deriv.at(2)+2*error_deriv.at(1)+error_deriv.at(0)-(c*c-1.414*c+1)*filtered_error_deriv.at(2)-(-2*c*c+2)*filtered_error_deriv.at(1));
   else
     loop_counter++;
-
-    ROS_INFO("filtered_error_deriv.at(0): %f", filtered_error_deriv.at(0));  //Debugging
 
   // calculate the control effort
   proportional = Kp * filtered_error.at(0);
@@ -231,7 +221,7 @@ void print_parameters()
     std::cout<<"LPF cutoff frequency: "<< cutoff_frequency << std::endl;
   std::cout << "pid node name: " << ros::this_node::getName() << std::endl;
   std::cout << "Name of topic from controller: " << topic_from_controller << std::endl;
-  std::cout << "Name of setpoint topic: " << path_error << std::endl;
+  std::cout << "Name of path error topic: " << path_error << std::endl;
   std::cout << "Integral-windup limit: " << windup_limit << std::endl;
   std::cout << "Saturation limits: " << upper_limit << "/" << lower_limit << std::endl;
   std::cout << "-----------------------------------------" << std::endl;
@@ -261,12 +251,6 @@ int main(int argc, char **argv)
   }
 
   // Get params if specified in launch file or as params on command-line, set defaults
-  /*node_priv.param<double>("Kp", Kp, 1.0);
-  node_priv.param<double>("Ki", Ki, 0.0);
-  node_priv.param<double>("Kd", Kd, 0.0);
-  node_priv.param<double>("upper_limit", upper_limit, 1000.0);
-  node_priv.param<double>("lower_limit", lower_limit, -1000.0);
-  node_priv.param<double>("windup_limit", windup_limit, 1000.0);*/ //Debugging
   node_priv.param<double>("cutoff_frequency", cutoff_frequency, -1.0);
   node_priv.param<std::string>("topic_from_controller", topic_from_controller, "control_effort");
   node_priv.param<std::string>("path_error", path_error, "path_error");
@@ -282,7 +266,7 @@ int main(int argc, char **argv)
 
   // instantiate publishers & subscribers
   control_effort_pub = node.advertise<ackermann_msgs::AckermannDrive>(topic_from_controller, 1);
-  ros::Subscriber setpoint_sub = node.subscribe(path_error, 1, setpoint_callback );
+  ros::Subscriber path_error_sub = node.subscribe(path_error, 1, path_error_callback);
 
   // configure dynamic reconfiguration
   dynamic_reconfigure::Server<pid::PidConfig> config_server;
