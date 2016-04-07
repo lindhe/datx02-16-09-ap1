@@ -66,25 +66,25 @@ include_directories(include
 ## Declare a cpp executable
 
 add_executable(controller src/controller.cpp)
-# add_executable(plant_sim src/plant_sim.cpp)
-# add_executable(test_sim src/test_sim.cpp)
-# add_executable(setpoint_node src/setpoint_node.cpp)
-# add_executable(sim_time src/sim_time.cpp)
+add_executable(plant_sim src/plant_sim.cpp)
+add_executable(test_sim src/test_sim.cpp)
+add_executable(setpoint_node src/setpoint_node.cpp)
+add_executable(sim_time src/sim_time.cpp)
 
 add_dependencies(controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater ${PROJECT_NAME}_gencfg)
-# add_dependencies(plant_sim ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
-# add_dependencies(test_sim ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
-# add_dependencies(setpoint_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
-# add_dependencies(sim_time ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
+add_dependencies(plant_sim ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
+add_dependencies(test_sim ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
+add_dependencies(setpoint_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
+add_dependencies(sim_time ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} dynamic_reconfigure diagnostic_updater)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 
 target_link_libraries(controller ${catkin_LIBRARIES})
-# target_link_libraries(plant_sim ${catkin_LIBRARIES})
-# target_link_libraries(test_sim ${catkin_LIBRARIES})
-# target_link_libraries(setpoint_node ${catkin_LIBRARIES})
-# target_link_libraries(sim_time ${catkin_LIBRARIES})
+target_link_libraries(plant_sim ${catkin_LIBRARIES})
+target_link_libraries(test_sim ${catkin_LIBRARIES})
+target_link_libraries(setpoint_node ${catkin_LIBRARIES})
+target_link_libraries(sim_time ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -101,17 +101,17 @@ target_link_libraries(controller ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-#install(TARGETS controller plant_sim
+install(TARGETS controller plant_sim
 #  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
  ## Mark executables and/or libraries for installation
-#install(TARGETS controller test_sim
+install(TARGETS controller test_sim
 #  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
