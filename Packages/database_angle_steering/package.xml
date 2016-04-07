@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>database</name>
+  <name>database_angle_steering</name>
   <version>0.0.0</version>
-  <description>The database package</description>
+  <description>The database_angle_steering package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
