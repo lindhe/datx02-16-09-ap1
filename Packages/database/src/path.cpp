@@ -3,7 +3,7 @@
 #include <math.h>
 using namespace std;
 #define step 50
-#define radius 3000
+#define radius 4000
 #define offset 1000
 int main () {
    ofstream file;

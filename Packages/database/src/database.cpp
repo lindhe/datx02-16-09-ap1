@@ -38,7 +38,7 @@ class DatabaseHandler{
         * Initialized to 0. Change in case we need coordinates with zeros
         *
         */
-        int track[240][2];
+        int track[320][2];
         
         /**
         *  Index in array "track" to the 2 closest points to the car.
@@ -317,7 +317,7 @@ class DatabaseHandler{
                 cout << "LENGTH_TRACK: " << length_track << endl;
                 
             }while((wanted_heading < -45 || wanted_heading > 45 ||
-                    length_track < 400) &&
+                    length_track < 550) &&
                     length_track < 2000);
             
             return wanted_heading;
