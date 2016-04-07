@@ -173,28 +173,25 @@ class DatabaseHandler{
         */
         
         //Tested and working!
-        double updateIndicies(int* car_information, int car_heading){
+        void updateIndicies(int* car_information){
             //Maybe add error handling if array is too small or too big.
             int car_coordinate_x, car_coordinate_y;
             int track_vector[2], car_vector[2];
-            double car_projection[2], track_double[2], car_point[2];
-            double heading, wanted_heading;
+            double car_projection[2], track_double[2];
+            double length_of_track_vector;
             
+            //Assigning argument values to variables.
             car_coordinate_x = car_information[0];
             car_coordinate_y = car_information[1];
             
-            car_point[0] = (double)car_coordinate_x; 
-            car_point[1] = (double)car_coordinate_y;
-            heading = (double)car_heading;
-            
-            //Create vector from point 1 to point 2.
+            //Create vector from point 1 to point 2 and move to origo.
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
             track_double[0] = (double)track_vector[0];
             track_double[1] = (double)track_vector[1];
                     
-            //Create vector from point 1 to position of car.
+            //Create vector from point 1 to position of car and move to origo.
             car_vector[0] = car_coordinate_x - track[point1][0];
             car_vector[1] = car_coordinate_y - track[point1][1];
             
@@ -203,8 +200,11 @@ class DatabaseHandler{
             //are updated with the next points on the track.
             orthogonalProjection(&car_vector[0], &track_vector[0],
                                     &car_projection[0]);                     
+            
             cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
                 "," << car_projection[1] << "]" << '\n';
+            
+            //Calculate length of the vectors for comparison
             double lenght_of_track_vector;
             double length_of_projection_vector;
             double origo[2] = {0,0};
@@ -215,112 +215,52 @@ class DatabaseHandler{
             length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
                                             &origo[0]);
             
-            //Change the value 1 to the margin we want to have to the next point.
+            //Change the value 100 to the margin we want to have to the next point.
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
-            double length_track;
-            int skip = 0;
-            do{
-                //Loop until a segment of the track in front of the car is chosen.
-                //Do this only once.
-                while((lenght_of_track_vector - length_of_projection_vector) <= 20 &&
-                    ((track_double[0] * car_projection[0] > 0) ||
-                    (track_double[1] * car_projection[1] > 0)) &&
-                    !skip){
-                    //Wrap around
-                    if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
-                              point2 >= ((sizeof(track)/8) - 1)){
-                        point1 = point2;
-                        point2 = 0;
-                    }
-                    else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
-                               point1 >= ((sizeof(track)/8) - 1)){
-                        point1 = 0;
-                        point2 = 1;
-                    }
-                    else {
-                        point1 = point2;
-                        point2 = point2 + 1;
-                    }
-                    
-                    //Create vector from point 1 to point 2.
-                    track_vector[0] = track[point2][0] - track[point1][0];
-                    track_vector[1] = track[point2][1] - track[point1][1];
-                    
-                    track_double[0] = (double)track_vector[0];
-                    track_double[1] = (double)track_vector[1];
-                            
-                    //Create vector from point 1 to position of car.
-                    car_vector[0] = car_coordinate_x - track[point1][0];
-                    car_vector[1] = car_coordinate_y - track[point1][1];
-                    
-                    orthogonalProjection(&car_vector[0], &track_vector[0],
-                                             &car_projection[0]);                     
-                    
-                    
-                    lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
-                                                &origo[0]);
-                    
-                    length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
-                                                    &origo[0]);
+            while((length_of_track_vector - length_of_projection_vector < 100) &&
+                    ((track_vector[0] * car_vector[0] > 0) || 
+                    (track_vector[1] * car_vector[1] > 0))){
+                //Wrap around
+                if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                          point2 >= ((sizeof(track)/8) - 1)){
+                    point1 = point2;
+                    point2 = 0;
                 }
-                if(skip == 1){
-                    //Wrap around
-                    if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
-                              point2 >= ((sizeof(track)/8) - 1)){
-                        point1 = point2;
-                        point2 = 0;
-                    }
-                    else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
-                               point1 >= ((sizeof(track)/8) - 1)){
-                        point1 = 0;
-                        point2 = 1;
-                    }
-                    else {
-                        point1 = point2;
-                        point2 = point2 + 1;
-                    }
+                else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                           point1 >= ((sizeof(track)/8) - 1)){
+                    point1 = 0;
+                    point2 = 1;
                 }
-                skip = 1;
-                vector<double> ref_point(2);       
-                vector<double> next_point(2);       
-                vector<double> result_point(2);       
-                ref_point[0] = 1;
-                ref_point[1] = 0;
-                next_point[0] = (double)track[point2][0] - car_point[0];
-                next_point[1] = (double)track[point2][1] - car_point[1];
-                length_track = sqrt(pow(next_point[0],2) + pow(next_point[1],2));
-                result_point[0] = next_point[0]/length_track; 
-                result_point[1] = next_point[1]/length_track;
-                double dotproduct = inner_product(result_point.begin(),
-                    result_point.end(), ref_point.begin(), 0.0);
-                double angle = acos(dotproduct) * 180.0 / 3.14159265; 
-                if(next_point[1] < 0){
-                    angle = 360.0 - angle;
+                else {
+                    point1 = point2;
+                    point2 = point2 + 1;
                 }
+                
+                //Create vector from point 1 to point 2 and move to origo.
+                track_vector[0] = track[point2][0] - track[point1][0];
+                track_vector[1] = track[point2][1] - track[point1][1];
+                
+                track_double[0] = (double)track_vector[0];
+                track_double[1] = (double)track_vector[1];
                         
-                cout << "Angle car_point: " << angle << endl;
+                //Create vector from point 1 to position of car and move to origo.
+                car_vector[0] = car_coordinate_x - track[point1][0];
+                car_vector[1] = car_coordinate_y - track[point1][1];
                 
-                wanted_heading = angle - heading;
+                //Calculate orthogonal projection. If projected vector is
+                //almost as long (marginal needs to be decided), the current points
+                //are updated with the next points on the track.
+                orthogonalProjection(&car_vector[0], &track_vector[0],
+                                       &car_projection[0]); 
                 
-                if(abs((int)(angle-heading)) > 180){
-                    if(angle > heading){
-                        wanted_heading = wanted_heading - 360;
-                    }
-                    else{
-                        wanted_heading = 360 + wanted_heading;
-                    }
-                }
+                lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                        &origo[0]);
             
-                cout << "WANTED HEADING: " << wanted_heading << endl;
-                cout << "LENGTH_TRACK: " << length_track << endl;
-                
-            }while((wanted_heading < -45 || wanted_heading > 45 ||
-                    length_track < 550) &&
-                    length_track < 2000);
-            
-            return wanted_heading;
+                length_of_projection_vector = 
+                        distanceBetweenPoints(&car_projection[0], &origo[0]);
+            }
         }
         
         /**
@@ -415,10 +355,9 @@ class DatabaseHandler{
             ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
             int x, y, heading;
             int car_coordinates[2], track_vector[2], car_vector[2];
-            double track_point[2], origo_point[2], orth_proj[2];
-            double track_point1[2], track_point2[2], track_double[2];
-            double distance_to_car, origo_to_car, origo_to_track;
-            double division, wanted_heading, projection_vector, track_length;
+            double distance, distance_to_track, distance_to_car;
+            double orth_proj[2], car_vector_double[2], origo[2];
+            double projection_point[2];
             float error;
             x = (int)msg.x;
             y = (int)msg.y;
@@ -435,82 +374,55 @@ class DatabaseHandler{
             car_vector[0] = x - track[point1][0];
             car_vector[1] = y - track[point1][1];
             
+            car_vector_double[0] = (double)car_vector[0];
+            car_vector_double[1] = (double)car_vector[1];
+            
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
-            track_double[0] = (double)track_vector[0];
-            track_double[1] = (double)track_vector[1];
+            origo[0] = 0;
+            origo[1] = 0;
             
-            track_point1[0] = (double)track[point1][0];
-            track_point1[1] = (double)track[point1][1];
-            
-            track_point2[0] = (double)track[point2][0];
-            track_point2[1] = (double)track[point2][2];
             //Update pointers to the track. If the new pointers are
             //still behind the car, update again.
             car_coordinates[0] = x;
             car_coordinates[1] = y;
             
-            wanted_heading = updateIndicies(&car_coordinates[0], heading);
+            updateIndicies(&car_coordinates[0]);
             
-            cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
-            cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
+            cout << "Point 1: [" << track[point1][0] << "," <<
+                    track[point1][1] << "]" << '\n';
+            cout << "Point 2: [" << track[point2][0] << "," <<
+                    track[point2][1] << "]" << '\n';
             
-            //Calculate distance between the car and the track
-            distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]); 
+            orthogonalProjection(&car_vector[0], &track_vector[0],
+                    &orth_proj[0]);
             
-            //Old code, uncomment if new does not work.
+            projection_point[0] = orth_proj[0] + (double)x;
+            projection_point[1] = orth_proj[1] + (double)y;
             
-            //Check which side of the circular track the car is on
-            /*
-            track_point[0] = (double)track[point1][0];
-            track_point[1] = (double)track[point1][1];
+            distance = distanceBetweenPoints(&orth_proj[0],
+                            &car_vector_double[0]);
             
-            orthogonalProjection(&car_vector[0], &track_vector[0], &orth_proj[0]);
+            distance_to_car = distanceBetweenPoints(&origo[0],
+                            &car_vector_double[0]);
+                            
+            distance_to_track = distanceBetweenPoints(&origo[0],
+                            &projection_point[0]);
             
-            track_point[0] = track_point[0] + orth_proj[0];
-            track_point[1] = track_point[1] + orth_proj[1];
-            
-            origo_point[0] = 0;
-            origo_point[1] = 0;
-            
-            origo_to_car = distanceBetweenPoints(&car_point[0], &origo_point[0]);
-            origo_to_track = distanceBetweenPoints(&track_point[0],
-                                &origo_point[0]);
-            */
-            /* 
-            //Calculate angle of vector pointing from car to next point
-            track_point[0] = (double)track[point2][0] - car_point[0];
-            track_point[1] = (double)track[point2][1] - car_point[1];
-            
-            division = track_point[1]/track_point[0];
-            
-            wanted_heading = atan(division)*180/3.141593;
-            cout << "Angle car_point: " << wanted_heading << endl;
-
-            if(car_point[1] > track_point[1]){
-                wanted_heading = 360 - wanted_heading;
+            if(distance_to_car < distance_to_track){
+                distance = distance * -1;
             }
-            
-            //Calculate if negative or positive angle
-            //Negative if turning right, positive if left.
-            if(wanted_heading > 180){
-                wanted_heading = wanted_heading - 360;
-            }
-            
-            */
-            
-            //car_error = (float) distance_to_car;
             
             std_msgs::Float64 path_error;
 
-            path_error.data = (float)wanted_heading;
+            path_error.data = (float)distance;
 
             ROS_INFO("Angle error: %.2f", path_error.data);
 
             database_pub.publish(path_error);
 
-            callback_loop ++;
+            callback_loop = 1;
         }
 
 };
