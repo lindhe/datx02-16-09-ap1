@@ -16,6 +16,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "sensor_msgs/Range.h"
 #include "ackermann_msgs/AckermannDrive.h"
 #include "pololu_mc/MCValues.h"
 
@@ -26,13 +27,20 @@
 #include "Serial.hpp"
 #include "utils.hpp"
 
+#define USS_RANGE 0.5
+#define MIN_CURRENT 1.2
+#define MAX_CURRENT 6
+#define MIN_RPM 3500
+#define MAX_RPM 15000
 #define GET_VALUES_INTERVAL 20
 #define SEND_ALIVE_INTERVAL 50
 
 int init_mc();
-int set_speed(uint16_t mc_speed);
-int set_steering_target(uint16_t angle);
-int set_steering_speed(uint8_t mc_angle_velocity);
+int set_speed(float speed);
+int set_steering_target(float angle);
+int set_steering_speed(float angle_velocity);
+int current_brake(int32_t current_in_mA);
+int set_duty(int32_t duty);
 
 int send_packet(const unsigned char *data, int len);
 int recv_packet();
@@ -41,6 +49,10 @@ void process_packet(const unsigned char *data, int len);
 Serial *mc;
 ros::Publisher mc_values_pub;
 
-uint16_t current_steering_angle;
-uint16_t current_speed;
-static float control_effort = 0;
+float current_steering_angle;
+float current_speed;
+float prev_speed;
+float us_sensor0;
+float us_sensor1;
+bool emergency;
+
