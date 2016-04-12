@@ -63,7 +63,7 @@ class DatabaseHandler{
         
                 database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
                 
-                for(int i = 0; i < 20; i++){
+                for(int i = 0; i < 319; i++){
                     track[i][0] = 0;
                     track[i][1] = 0;
                 }
@@ -103,6 +103,37 @@ class DatabaseHandler{
             res_vec[1] = (double)vec1[1] * result;
             
             return;
+        }
+        
+        /**
+        * Function returns TRUE if track_point is on the right side of the car,
+        * false if left.
+        * Arguments: int car_point[x,y] is the coordinates of the car.
+        */
+        
+        //Not yet tested.
+        bool isRight(int* car_point, int heading){
+            int car_x, car_y, track_x, track_y, new_x, new_y;
+            
+            car_x = car_point[0];
+            car_y = car_point[1];
+            
+            track_x = track[point2][0];
+            track_y = track[point2][1];
+            
+            new_x = (track_x - car_x)*cos(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*sin(((double)heading*3.1415)/180);
+                    
+            new_y = -(track_x - car_x)*sin(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*cos(((double)heading*3.1415)/180);
+                    
+            if(new_y-1 > 0){
+                return true;
+            }else{
+                return false;
+            }
+            
+            
         }
         
         /**
@@ -532,7 +563,7 @@ int main(int argc, char **argv){
 
     DatabaseHandler obj; 
     //        int count = 0;
-
+    
     ros::spin();
 
     //        ++count;
