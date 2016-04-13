@@ -111,7 +111,7 @@ class DatabaseHandler{
         * Arguments: int car_point[x,y] is the coordinates of the car.
         */
         
-        //Not yet tested.
+        //Tested and working!
         bool isRight(int* car_point, int heading){
             int car_x, car_y, track_x, track_y, new_x, new_y;
             
@@ -125,9 +125,9 @@ class DatabaseHandler{
                     (track_y - car_y)*sin(((double)heading*3.1415)/180);
                     
             new_y = -(track_x - car_x)*sin(((double)heading*3.1415)/180) +
-                    (track_y - car_y)*cos(((double)heading*3.1415)/180);
-                    
-            if(new_y-1 > 0){
+                    (track_y - car_y)*cos(((double)heading*3.1415)/180);                    
+            
+            if(new_y*-1 > 0){
                 return true;
             }else{
                 return false;
@@ -205,12 +205,14 @@ class DatabaseHandler{
         
         //Tested and working!
         double updateIndicies(int* car_information, int car_heading){
-            //Maybe add error handling if array is too small or too big.
+            
+            //Declare variables.
             int car_coordinate_x, car_coordinate_y;
             int track_vector[2], car_vector[2];
             double car_projection[2], track_double[2], car_point[2];
             double heading, wanted_heading;
             
+            //Assign values to variables.
             car_coordinate_x = car_information[0];
             car_coordinate_y = car_information[1];
             
@@ -229,9 +231,8 @@ class DatabaseHandler{
             car_vector[0] = car_coordinate_x - track[point1][0];
             car_vector[1] = car_coordinate_y - track[point1][1];
             
-            //Calculate orthogonal projection. If projected vector is
-            //almost as long (marginal needs to be decided), the current points
-            //are updated with the next points on the track.
+            //Calculate orthogonal projection of vector from point1 to the car
+            //onto vector from point1 to point2.
             orthogonalProjection(&car_vector[0], &track_vector[0],
                                     &car_projection[0]);                     
             cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
@@ -240,13 +241,13 @@ class DatabaseHandler{
             double length_of_projection_vector;
             double origo[2] = {0,0};
             
+            //Length of the track and the projection to use for comparison.
             lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
                                         &origo[0]);
             
             length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
                                             &origo[0]);
             
-            //Change the value 1 to the margin we want to have to the next point.
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
@@ -259,7 +260,9 @@ class DatabaseHandler{
                     ((track_double[0] * car_projection[0] > 0) ||
                     (track_double[1] * car_projection[1] > 0)) &&
                     !skip){
-                    //Wrap around
+                    
+                    //Wrap around. If the the end of the array is reached,
+                    //go to the beginning.
                     if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
                               point2 >= ((sizeof(track)/8) - 1)){
                         point1 = point2;
@@ -286,6 +289,7 @@ class DatabaseHandler{
                     car_vector[0] = car_coordinate_x - track[point1][0];
                     car_vector[1] = car_coordinate_y - track[point1][1];
                     
+                    //Update values of variables.
                     orthogonalProjection(&car_vector[0], &track_vector[0],
                                              &car_projection[0]);                     
                     
@@ -363,15 +367,20 @@ class DatabaseHandler{
         
         //Tested and working.
         void initializeIndicies(int x1, int y1){
+            
+            //Declare variables
             double x2, y2, xdiff, ydiff, xdiff_pow, ydiff_pow, distance;
             int point1_distance, point2_distance;
             point1 = 0;
             point2 = 0;
             point1_distance = numeric_limits<int>::max();
             point2_distance = numeric_limits<int>::max();
-            
             int i = 0;
             int place = 0;
+            
+            //Loop through array track[][] to find the closest point to the car.
+            //Choose that point and the following point, save indicies n1 and n2
+            //in array track[n][] in pointer variables point1 and point2.
             while(((track[i][0] != 0) || (track [i][1] != 0)) &&
                     (i < (sizeof(track)/8))){
                 
@@ -394,7 +403,8 @@ class DatabaseHandler{
                 i++;
             }
             
-            //Wrap around
+            //Wrap around. If we are at an empty space in the array, go back
+            //to the beginning.
             if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
                     point1 >= ((sizeof(track)/8) - 1)){
                 
@@ -413,17 +423,20 @@ class DatabaseHandler{
         */
         //Tested and working
         void loadTrack(){
+        
+            //Declare variables
             string line;
             ifstream datafile;
-            datafile.open("src/database/src/data.txt",ifstream::in);
+            datafile.open("src/database_angle_steering/src/data.txt",ifstream::in);
             int x, y;
             int i = 0;
             
+            //Read data file. Store coordinates from file in array track[][].
             if(datafile.is_open()){
                 while(getline(datafile,line)){
                     stringstream trackstream (line);
                     
-                    //Get values from row
+                    //Get values from row.
                     trackstream >> x >> y;
                     
                     track[i][0] = x;
@@ -439,8 +452,10 @@ class DatabaseHandler{
         }
 
        //Template to use the position from gulliview 
-       //Not yet tested.
+       //Tested and working
         void callback(const gulliview_server::Pos& msg){
+            
+            //Get data from the message and declare variables.
             ROS_INFO("I heard: x = %lld", (long long)msg.x);
             ROS_INFO("I heard: y = %lld", (long long)msg.y);
             ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
@@ -455,7 +470,8 @@ class DatabaseHandler{
             y = (int)msg.y;
             heading = (int)msg.heading;
             
-            //If it is the first message received, initialize pointers to the track.
+            //If it is the first message received, initialize pointers.
+            //to the track.
             if(callback_loop == 0){
                 initializeIndicies(x,y);
             }
@@ -477,6 +493,7 @@ class DatabaseHandler{
             
             track_point2[0] = (double)track[point2][0];
             track_point2[1] = (double)track[point2][2];
+            
             //Update pointers to the track. If the new pointers are
             //still behind the car, update again.
             car_coordinates[0] = x;
@@ -487,52 +504,10 @@ class DatabaseHandler{
             cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
             cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
             
-            //Calculate distance between the car and the track
+            //Calculate distance between the car and the track.
             distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]); 
             
-            //Old code, uncomment if new does not work.
-            
-            //Check which side of the circular track the car is on
-            /*
-            track_point[0] = (double)track[point1][0];
-            track_point[1] = (double)track[point1][1];
-            
-            orthogonalProjection(&car_vector[0], &track_vector[0], &orth_proj[0]);
-            
-            track_point[0] = track_point[0] + orth_proj[0];
-            track_point[1] = track_point[1] + orth_proj[1];
-            
-            origo_point[0] = 0;
-            origo_point[1] = 0;
-            
-            origo_to_car = distanceBetweenPoints(&car_point[0], &origo_point[0]);
-            origo_to_track = distanceBetweenPoints(&track_point[0],
-                                &origo_point[0]);
-            */
-            /* 
-            //Calculate angle of vector pointing from car to next point
-            track_point[0] = (double)track[point2][0] - car_point[0];
-            track_point[1] = (double)track[point2][1] - car_point[1];
-            
-            division = track_point[1]/track_point[0];
-            
-            wanted_heading = atan(division)*180/3.141593;
-            cout << "Angle car_point: " << wanted_heading << endl;
-
-            if(car_point[1] > track_point[1]){
-                wanted_heading = 360 - wanted_heading;
-            }
-            
-            //Calculate if negative or positive angle
-            //Negative if turning right, positive if left.
-            if(wanted_heading > 180){
-                wanted_heading = wanted_heading - 360;
-            }
-            
-            */
-            
-            //car_error = (float) distance_to_car;
-            
+            //Publish error message.
             std_msgs::Float64 path_error;
 
             path_error.data = (float)wanted_heading;
@@ -560,7 +535,9 @@ int main(int argc, char **argv){
      */
 
     ros::init(argc, argv, "database_node");
-
+    
+    cout << "Hej" << endl;
+    
     DatabaseHandler obj; 
     //        int count = 0;
     
