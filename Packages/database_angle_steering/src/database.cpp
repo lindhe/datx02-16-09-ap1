@@ -106,13 +106,68 @@ class DatabaseHandler{
         }
         
         /**
-        * Function returns TRUE if track_point is on the right side of the car,
-        * false if left.
-        * Arguments: int car_point[x,y] is the coordinates of the car.
+        * Function for calculating the new steering angle of the car. 
+        * Arguments: car_point[x,y] is the coordinates of the car and heading
+        * is the angle of the car.
+        * Function returns the new steering angle in degrees.
         */
         
-        //Tested and working!
-        bool isRight(int* car_point, int heading){
+        //Not yet tested.
+        double calculateSteeringAngle(int* car_point, int heading){
+            //Declare variables
+            int car_x, car_y, track_x, track_y;
+            int new_coordinates[2], origo[2];
+            double distance, radius, lenght_of_car, angle;
+            double double_new_coordinates[2];
+            double double_origo[2];
+            
+            //Change this to the length of the car in "coordinate units".
+            lenght_of_car = 0;
+            
+            origo[0] = 0;
+            origo[1] = 0;
+            
+            double_origo[0] = 0;
+            double_origo[0] = 0;
+            
+            car_x = car_point[0];
+            car_y = car_point[1];
+            
+            track_x = track[point2][0];
+            track_y = track[point2][1];
+            
+            //Convert track coordinates to local coordinates for the car
+            //and save them in the array new_coordinates
+            convertCoordinates(&car_point[0], heading, &new_coordinates[0]);
+            
+            double_new_coordinates[0] = (double)(new_coordinates[0]);
+            double_new_coordinates[1] = (double)(new_coordiantes[1]);
+            
+            //Calculate the distance between the back axle of the car and
+            //the next point of the track.
+            distance = distanceBetweenPoints(&double_origo[0],
+                        &double_new_coordinates[0]);
+                            
+            radius = pow(distance, 2.0)/(2 * double_new_coordinates[0]);
+            
+            //Calculate the wanted angle for the wheels.
+            angle = atan(length_of_car/radius);
+            
+            //Return angle with inverted sign, since we want angles to the
+            //right side of the car to be negative.
+            return angle * -1;
+        } 
+        
+        /**
+        * Function takes the global coordinates of a point and converts them
+        * to coordinates in the cars local coordinate system.
+        * Arguments: car_point[x,y] is the coordinates of the car,
+        * heading is the angle of the car and new_point[x,y] is the
+        * converted coordinates.
+        */
+        
+        //Not fully tested.
+        void convertCoordinates(int* car_point, int heading, int* new_point){
             int car_x, car_y, track_x, track_y, new_x, new_y;
             
             car_x = car_point[0];
@@ -121,25 +176,21 @@ class DatabaseHandler{
             track_x = track[point2][0];
             track_y = track[point2][1];
             
-            new_x = (track_x - car_x)*cos(((double)heading*3.1415)/180) +
-                    (track_y - car_y)*sin(((double)heading*3.1415)/180);
+            new_x = (int)((track_x - car_x)*cos(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*sin(((double)heading*3.1415)/180));
                     
-            new_y = -(track_x - car_x)*sin(((double)heading*3.1415)/180) +
-                    (track_y - car_y)*cos(((double)heading*3.1415)/180);                    
+            new_y = (int)(-(track_x - car_x)*sin(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*cos(((double)heading*3.1415)/180));                    
             
-            if(new_y*-1 > 0){
-                return true;
-            }else{
-                return false;
-            }
-            
-            
+            new_point[0] = new_x;
+            new_point[1] = new_y;
         }
         
         /**
         * Function for calculating the distance between two points.
         * Arguments on form &double[x,y].
         */
+        
         //Tested and Working!
         double distanceBetweenPoints(double* first_point, double* second_point){
             double first_point_x, first_point_y, second_point_x, second_point_y;
