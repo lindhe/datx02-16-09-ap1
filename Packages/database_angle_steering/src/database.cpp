@@ -117,12 +117,14 @@ class DatabaseHandler{
             //Declare variables
             int car_x, car_y, track_x, track_y;
             int new_coordinates[2], origo[2];
-            double distance, radius, lenght_of_car, angle;
+            double distance, radius, angle;
+            double length_of_car;
             double double_new_coordinates[2];
             double double_origo[2];
             
+            
             //Change this to the length of the car in "coordinate units".
-            lenght_of_car = 0;
+            length_of_car = 1260;
             
             origo[0] = 0;
             origo[1] = 0;
@@ -141,21 +143,23 @@ class DatabaseHandler{
             convertCoordinates(&car_point[0], heading, &new_coordinates[0]);
             
             double_new_coordinates[0] = (double)(new_coordinates[0]);
-            double_new_coordinates[1] = (double)(new_coordiantes[1]);
+            double_new_coordinates[1] = (double)(new_coordinates[1]);
             
             //Calculate the distance between the back axle of the car and
             //the next point of the track.
             distance = distanceBetweenPoints(&double_origo[0],
                         &double_new_coordinates[0]);
-                            
-            radius = pow(distance, 2.0)/(2 * double_new_coordinates[0]);
+            
+            //Calculate the radius of the circle from the car to the next point.           
+            radius = pow(distance, 2)/(2 * double_new_coordinates[1]);
             
             //Calculate the wanted angle for the wheels.
             angle = atan(length_of_car/radius);
-            
+            angle = (angle * 180)/3.1415;
             //Return angle with inverted sign, since we want angles to the
             //right side of the car to be negative.
-            return angle * -1;
+            
+            return angle;
         } 
         
         /**
@@ -182,6 +186,9 @@ class DatabaseHandler{
             new_y = (int)(-(track_x - car_x)*sin(((double)heading*3.1415)/180) +
                     (track_y - car_y)*cos(((double)heading*3.1415)/180));                    
             
+            cout << "New x: " << new_x << endl;
+            cout << "New y: " << new_y << endl;
+                        
             new_point[0] = new_x;
             new_point[1] = new_y;
         }
@@ -261,7 +268,9 @@ class DatabaseHandler{
             int car_coordinate_x, car_coordinate_y;
             int track_vector[2], car_vector[2];
             double car_projection[2], track_double[2], car_point[2];
-            double heading, wanted_heading;
+            double heading, wanted_heading, steering_angle;
+            double length_of_track_vector, length_of_projection_vector;
+            double origo[2] = {0,0};
             
             //Assign values to variables.
             car_coordinate_x = car_information[0];
@@ -288,28 +297,31 @@ class DatabaseHandler{
                                     &car_projection[0]);                     
             cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
                 "," << car_projection[1] << "]" << '\n';
-            double lenght_of_track_vector;
-            double length_of_projection_vector;
-            double origo[2] = {0,0};
             
             //Length of the track and the projection to use for comparison.
-            lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
+            length_of_track_vector = distanceBetweenPoints(&track_double[0],
                                         &origo[0]);
             
             length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
                                             &origo[0]);
             
+            //Calculate the steering angle the car needs to have to get to
+            //the next point.
+            steering_angle = calculateSteeringAngle(&car_information[0], car_heading);
+            cout << "Steering angle needed: " << steering_angle << endl;
+            
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
-            double length_track;
+            double length_track, distance_to_next;
             int skip = 0;
             do{
                 //Loop until a segment of the track in front of the car is chosen.
                 //Do this only once.
-                while((lenght_of_track_vector - length_of_projection_vector) <= 20 &&
+                while((length_of_track_vector - length_of_projection_vector)<= 20 &&
                     ((track_double[0] * car_projection[0] > 0) ||
                     (track_double[1] * car_projection[1] > 0)) &&
+                    abs((int)steering_angle) < 26 &&
                     !skip){
                     
                     //Wrap around. If the the end of the array is reached,
@@ -339,17 +351,6 @@ class DatabaseHandler{
                     //Create vector from point 1 to position of car.
                     car_vector[0] = car_coordinate_x - track[point1][0];
                     car_vector[1] = car_coordinate_y - track[point1][1];
-                    
-                    //Update values of variables.
-                    orthogonalProjection(&car_vector[0], &track_vector[0],
-                                             &car_projection[0]);                     
-                    
-                    
-                    lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
-                                                &origo[0]);
-                    
-                    length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
-                                                    &origo[0]);
                 }
                 if(skip == 1){
                     //Wrap around
@@ -369,6 +370,7 @@ class DatabaseHandler{
                     }
                 }
                 skip = 1;
+                /**
                 vector<double> ref_point(2);       
                 vector<double> next_point(2);       
                 vector<double> result_point(2);       
@@ -398,13 +400,33 @@ class DatabaseHandler{
                         wanted_heading = 360 + wanted_heading;
                     }
                 }
-            
-                cout << "WANTED HEADING: " << wanted_heading << endl;
-                cout << "LENGTH_TRACK: " << length_track << endl;
+                */
+                //Update values of variables.
+                orthogonalProjection(&car_vector[0], &track_vector[0],
+                                         &car_projection[0]);                     
+                    
+                    
+                length_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                            &origo[0]);
+                    
+                length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
+                                                &origo[0]);
+                                                    
+                steering_angle = calculateSteeringAngle(&car_information[0], car_heading);
                 
-            }while((wanted_heading < -45 || wanted_heading > 45 ||
-                    length_track < 550) &&
-                    length_track < 2000);
+                wanted_heading = steering_angle;
+                
+                double double_point2[2];
+                double_point2[0] = (double)track[point2][0];
+                double_point2[1] = (double)track[point2][1];
+                
+                distance_to_next = distanceBetweenPoints(&double_point2[0], &car_point[0]);
+                
+                cout << "WANTED HEADING: " << wanted_heading << endl;
+                
+            }while((wanted_heading < -26 || wanted_heading > 26 ||
+                    (length_of_track_vector - length_of_projection_vector)
+                    < 1400) && distance_to_next < 2500);
             
             return wanted_heading;
         }

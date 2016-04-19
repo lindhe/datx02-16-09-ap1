@@ -250,8 +250,8 @@ int main(int argc, char **argv)
   }
 
   // Set constant maximum speed for the steering and constant speed for the mc.
-  set_steering_speed(20);
-  set_speed(6055);
+  set_steering_speed(0);
+  set_speed(6065);
 
   ros::NodeHandle node_priv("~");  //Not needed now, but cound maybe be useful later
 
