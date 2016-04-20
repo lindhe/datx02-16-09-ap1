@@ -250,7 +250,7 @@ class DatabaseHandler{
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
-            while((length_of_track_vector - length_of_projection_vector < 100) &&
+            while((length_of_track_vector - length_of_projection_vector < 500) &&
                     ((track_vector[0] * car_vector[0] > 0) || 
                     (track_vector[1] * car_vector[1] > 0))){
                 //Wrap around
