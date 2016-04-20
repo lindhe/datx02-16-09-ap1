@@ -158,6 +158,7 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
   // Publish the stabilizing control effort if the controller is enabled
   if (true)
   {
+    control_effort = control_effort;
     control_msg.steering_angle = control_effort;
     control_effort_pub.publish(control_msg);
   }
@@ -247,7 +248,7 @@ int main(int argc, char **argv)
 {
   ROS_INFO("Starting pid with node name %s", node_name.c_str());
 
-  Kp = 14, Ki = 0; Kd = 25;	//for testing
+  Kp = 0.8, Ki = 0; Kd = 0;	//for testing
 
   // Initialize ROS stuff
   ros::init(argc, argv, node_name);     // Note node_name can be overidden by launch file

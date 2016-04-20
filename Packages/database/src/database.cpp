@@ -63,7 +63,7 @@ class DatabaseHandler{
         
                 database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
                 
-                for(int i = 0; i < 20; i++){
+                for(int i = 0; i < 320; i++){
                     track[i][0] = 0;
                     track[i][1] = 0;
                 }
