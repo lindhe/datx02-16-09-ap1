@@ -63,7 +63,7 @@ class DatabaseHandler{
         
                 database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
                 
-                for(int i = 0; i < 20; i++){
+                for(int i = 0; i < 319; i++){
                     track[i][0] = 0;
                     track[i][1] = 0;
                 }
@@ -106,9 +106,98 @@ class DatabaseHandler{
         }
         
         /**
+        * Function for calculating the new steering angle of the car. 
+        * Arguments: car_point[x,y] is the coordinates of the car and heading
+        * is the angle of the car.
+        * Function returns the new steering angle in degrees.
+        */
+        
+        //Not yet tested.
+        double calculateSteeringAngle(int* car_point, int heading){
+            //Declare variables
+            int car_x, car_y, track_x, track_y;
+            int new_coordinates[2], origo[2];
+            double distance, radius, angle;
+            double length_of_car;
+            double double_new_coordinates[2];
+            double double_origo[2];
+            
+            
+            //Change this to the length of the car in "coordinate units".
+            length_of_car = 1260;
+            
+            origo[0] = 0;
+            origo[1] = 0;
+            
+            double_origo[0] = 0;
+            double_origo[0] = 0;
+            
+            car_x = car_point[0];
+            car_y = car_point[1];
+            
+            track_x = track[point2][0];
+            track_y = track[point2][1];
+            
+            //Convert track coordinates to local coordinates for the car
+            //and save them in the array new_coordinates
+            convertCoordinates(&car_point[0], heading, &new_coordinates[0]);
+            
+            double_new_coordinates[0] = (double)(new_coordinates[0]);
+            double_new_coordinates[1] = (double)(new_coordinates[1]);
+            
+            //Calculate the distance between the back axle of the car and
+            //the next point of the track.
+            distance = distanceBetweenPoints(&double_origo[0],
+                        &double_new_coordinates[0]);
+            
+            //Calculate the radius of the circle from the car to the next point.           
+            radius = pow(distance, 2)/(2 * double_new_coordinates[1]);
+            
+            //Calculate the wanted angle for the wheels.
+            angle = atan(length_of_car/radius);
+            angle = (angle * 180)/3.1415;
+            //Return angle with inverted sign, since we want angles to the
+            //right side of the car to be negative.
+            
+            return angle;
+        } 
+        
+        /**
+        * Function takes the global coordinates of a point and converts them
+        * to coordinates in the cars local coordinate system.
+        * Arguments: car_point[x,y] is the coordinates of the car,
+        * heading is the angle of the car and new_point[x,y] is the
+        * converted coordinates.
+        */
+        
+        //Not fully tested.
+        void convertCoordinates(int* car_point, int heading, int* new_point){
+            int car_x, car_y, track_x, track_y, new_x, new_y;
+            
+            car_x = car_point[0];
+            car_y = car_point[1];
+            
+            track_x = track[point2][0];
+            track_y = track[point2][1];
+            
+            new_x = (int)((track_x - car_x)*cos(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*sin(((double)heading*3.1415)/180));
+                    
+            new_y = (int)(-(track_x - car_x)*sin(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*cos(((double)heading*3.1415)/180));                    
+            
+            cout << "New x: " << new_x << endl;
+            cout << "New y: " << new_y << endl;
+                        
+            new_point[0] = new_x;
+            new_point[1] = new_y;
+        }
+        
+        /**
         * Function for calculating the distance between two points.
         * Arguments on form &double[x,y].
         */
+        
         //Tested and Working!
         double distanceBetweenPoints(double* first_point, double* second_point){
             double first_point_x, first_point_y, second_point_x, second_point_y;
@@ -173,94 +262,173 @@ class DatabaseHandler{
         */
         
         //Tested and working!
-        void updateIndicies(int* car_information){
-            //Maybe add error handling if array is too small or too big.
+        double updateIndicies(int* car_information, int car_heading){
+            
+            //Declare variables.
             int car_coordinate_x, car_coordinate_y;
             int track_vector[2], car_vector[2];
-            double car_projection[2], track_double[2];
-            double length_of_track_vector;
+            double car_projection[2], track_double[2], car_point[2];
+            double heading, wanted_heading, steering_angle;
+            double length_of_track_vector, length_of_projection_vector;
+            double origo[2] = {0,0};
             
-            //Assigning argument values to variables.
+            //Assign values to variables.
             car_coordinate_x = car_information[0];
             car_coordinate_y = car_information[1];
             
-            //Create vector from point 1 to point 2 and move to origo.
+            car_point[0] = (double)car_coordinate_x; 
+            car_point[1] = (double)car_coordinate_y;
+            heading = (double)car_heading;
+            
+            //Create vector from point 1 to point 2.
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
             track_double[0] = (double)track_vector[0];
             track_double[1] = (double)track_vector[1];
                     
-            //Create vector from point 1 to position of car and move to origo.
+            //Create vector from point 1 to position of car.
             car_vector[0] = car_coordinate_x - track[point1][0];
             car_vector[1] = car_coordinate_y - track[point1][1];
             
-            //Calculate orthogonal projection. If projected vector is
-            //almost as long (marginal needs to be decided), the current points
-            //are updated with the next points on the track.
+            //Calculate orthogonal projection of vector from point1 to the car
+            //onto vector from point1 to point2.
             orthogonalProjection(&car_vector[0], &track_vector[0],
                                     &car_projection[0]);                     
-            
             cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
                 "," << car_projection[1] << "]" << '\n';
             
-            //Calculate length of the vectors for comparison
-            double lenght_of_track_vector;
-            double length_of_projection_vector;
-            double origo[2] = {0,0};
-            
-            lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
+            //Length of the track and the projection to use for comparison.
+            length_of_track_vector = distanceBetweenPoints(&track_double[0],
                                         &origo[0]);
             
             length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
                                             &origo[0]);
             
-            //Change the value 100 to the margin we want to have to the next point.
+            //Calculate the steering angle the car needs to have to get to
+            //the next point.
+            steering_angle = calculateSteeringAngle(&car_information[0], car_heading);
+            cout << "Steering angle needed: " << steering_angle << endl;
+            
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
-            while((length_of_track_vector - length_of_projection_vector < 100) &&
-                    ((track_vector[0] * car_vector[0] > 0) || 
-                    (track_vector[1] * car_vector[1] > 0))){
-                //Wrap around
-                if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
-                          point2 >= ((sizeof(track)/8) - 1)){
-                    point1 = point2;
-                    point2 = 0;
+            double length_track, distance_to_next;
+            int skip = 0;
+            do{
+                //Loop until a segment of the track in front of the car is chosen.
+                //Do this only once.
+                while((length_of_track_vector - length_of_projection_vector)<= 20 &&
+                    ((track_double[0] * car_projection[0] > 0) ||
+                    (track_double[1] * car_projection[1] > 0)) &&
+                    abs((int)steering_angle) < 26 &&
+                    !skip){
+                    
+                    //Wrap around. If the the end of the array is reached,
+                    //go to the beginning.
+                    if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                              point2 >= ((sizeof(track)/8) - 1)){
+                        point1 = point2;
+                        point2 = 0;
+                    }
+                    else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                               point1 >= ((sizeof(track)/8) - 1)){
+                        point1 = 0;
+                        point2 = 1;
+                    }
+                    else {
+                        point1 = point2;
+                        point2 = point2 + 1;
+                    }
+                    
+                    //Create vector from point 1 to point 2.
+                    track_vector[0] = track[point2][0] - track[point1][0];
+                    track_vector[1] = track[point2][1] - track[point1][1];
+                    
+                    track_double[0] = (double)track_vector[0];
+                    track_double[1] = (double)track_vector[1];
+                            
+                    //Create vector from point 1 to position of car.
+                    car_vector[0] = car_coordinate_x - track[point1][0];
+                    car_vector[1] = car_coordinate_y - track[point1][1];
                 }
-                else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
-                           point1 >= ((sizeof(track)/8) - 1)){
-                    point1 = 0;
-                    point2 = 1;
+                if(skip == 1){
+                    //Wrap around
+                    if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                              point2 >= ((sizeof(track)/8) - 1)){
+                        point1 = point2;
+                        point2 = 0;
+                    }
+                    else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                               point1 >= ((sizeof(track)/8) - 1)){
+                        point1 = 0;
+                        point2 = 1;
+                    }
+                    else {
+                        point1 = point2;
+                        point2 = point2 + 1;
+                    }
                 }
-                else {
-                    point1 = point2;
-                    point2 = point2 + 1;
+                skip = 1;
+                /**
+                vector<double> ref_point(2);       
+                vector<double> next_point(2);       
+                vector<double> result_point(2);       
+                ref_point[0] = 1;
+                ref_point[1] = 0;
+                next_point[0] = (double)track[point2][0] - car_point[0];
+                next_point[1] = (double)track[point2][1] - car_point[1];
+                length_track = sqrt(pow(next_point[0],2) + pow(next_point[1],2));
+                result_point[0] = next_point[0]/length_track; 
+                result_point[1] = next_point[1]/length_track;
+                double dotproduct = inner_product(result_point.begin(),
+                    result_point.end(), ref_point.begin(), 0.0);
+                double angle = acos(dotproduct) * 180.0 / 3.14159265; 
+                if(next_point[1] < 0){
+                    angle = 360.0 - angle;
                 }
-                
-                //Create vector from point 1 to point 2 and move to origo.
-                track_vector[0] = track[point2][0] - track[point1][0];
-                track_vector[1] = track[point2][1] - track[point1][1];
-                
-                track_double[0] = (double)track_vector[0];
-                track_double[1] = (double)track_vector[1];
                         
-                //Create vector from point 1 to position of car and move to origo.
-                car_vector[0] = car_coordinate_x - track[point1][0];
-                car_vector[1] = car_coordinate_y - track[point1][1];
+                cout << "Angle car_point: " << angle << endl;
                 
-                //Calculate orthogonal projection. If projected vector is
-                //almost as long (marginal needs to be decided), the current points
-                //are updated with the next points on the track.
+                wanted_heading = angle - heading;
+                
+                if(abs((int)(angle-heading)) > 180){
+                    if(angle > heading){
+                        wanted_heading = wanted_heading - 360;
+                    }
+                    else{
+                        wanted_heading = 360 + wanted_heading;
+                    }
+                }
+                */
+                //Update values of variables.
                 orthogonalProjection(&car_vector[0], &track_vector[0],
-                                       &car_projection[0]); 
+                                         &car_projection[0]);                     
+                    
+                    
+                length_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                            &origo[0]);
+                    
+                length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
+                                                &origo[0]);
+                                                    
+                steering_angle = calculateSteeringAngle(&car_information[0], car_heading);
                 
-                lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
-                                        &origo[0]);
+                wanted_heading = steering_angle;
+                
+                double double_point2[2];
+                double_point2[0] = (double)track[point2][0];
+                double_point2[1] = (double)track[point2][1];
+                
+                distance_to_next = distanceBetweenPoints(&double_point2[0], &car_point[0]);
+                
+                cout << "WANTED HEADING: " << wanted_heading << endl;
+                
+            }while((wanted_heading < -26 || wanted_heading > 26 ||
+                    (length_of_track_vector - length_of_projection_vector)
+                    < 1400) && distance_to_next < 2500);
             
-                length_of_projection_vector = 
-                        distanceBetweenPoints(&car_projection[0], &origo[0]);
-            }
+            return wanted_heading;
         }
         
         /**
@@ -272,15 +440,20 @@ class DatabaseHandler{
         
         //Tested and working.
         void initializeIndicies(int x1, int y1){
+            
+            //Declare variables
             double x2, y2, xdiff, ydiff, xdiff_pow, ydiff_pow, distance;
             int point1_distance, point2_distance;
             point1 = 0;
             point2 = 0;
             point1_distance = numeric_limits<int>::max();
             point2_distance = numeric_limits<int>::max();
-            
             int i = 0;
             int place = 0;
+            
+            //Loop through array track[][] to find the closest point to the car.
+            //Choose that point and the following point, save indicies n1 and n2
+            //in array track[n][] in pointer variables point1 and point2.
             while(((track[i][0] != 0) || (track [i][1] != 0)) &&
                     (i < (sizeof(track)/8))){
                 
@@ -303,7 +476,8 @@ class DatabaseHandler{
                 i++;
             }
             
-            //Wrap around
+            //Wrap around. If we are at an empty space in the array, go back
+            //to the beginning.
             if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
                     point1 >= ((sizeof(track)/8) - 1)){
                 
@@ -322,17 +496,20 @@ class DatabaseHandler{
         */
         //Tested and working
         void loadTrack(){
+        
+            //Declare variables
             string line;
             ifstream datafile;
-            datafile.open("src/database/src/data.txt",ifstream::in);
+            datafile.open("src/database_angle_steering/src/data.txt",ifstream::in);
             int x, y;
             int i = 0;
             
+            //Read data file. Store coordinates from file in array track[][].
             if(datafile.is_open()){
                 while(getline(datafile,line)){
                     stringstream trackstream (line);
                     
-                    //Get values from row
+                    //Get values from row.
                     trackstream >> x >> y;
                     
                     track[i][0] = x;
@@ -348,22 +525,26 @@ class DatabaseHandler{
         }
 
        //Template to use the position from gulliview 
-       //Not yet tested.
+       //Tested and working
         void callback(const gulliview_server::Pos& msg){
+            
+            //Get data from the message and declare variables.
             ROS_INFO("I heard: x = %lld", (long long)msg.x);
             ROS_INFO("I heard: y = %lld", (long long)msg.y);
             ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
             int x, y, heading;
             int car_coordinates[2], track_vector[2], car_vector[2];
-            double distance, distance_to_track, distance_to_car;
-            double orth_proj[2], car_vector_double[2], origo[2];
-            double projection_point[2];
+            double track_point[2], origo_point[2], orth_proj[2];
+            double track_point1[2], track_point2[2], track_double[2];
+            double distance_to_car, origo_to_car, origo_to_track;
+            double division, wanted_heading, projection_vector, track_length;
             float error;
             x = (int)msg.x;
             y = (int)msg.y;
             heading = (int)msg.heading;
             
-            //If it is the first message received, initialize pointers to the track.
+            //If it is the first message received, initialize pointers.
+            //to the track.
             if(callback_loop == 0){
                 initializeIndicies(x,y);
             }
@@ -374,55 +555,41 @@ class DatabaseHandler{
             car_vector[0] = x - track[point1][0];
             car_vector[1] = y - track[point1][1];
             
-            car_vector_double[0] = (double)car_vector[0];
-            car_vector_double[1] = (double)car_vector[1];
-            
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
-            origo[0] = 0;
-            origo[1] = 0;
+            track_double[0] = (double)track_vector[0];
+            track_double[1] = (double)track_vector[1];
+            
+            track_point1[0] = (double)track[point1][0];
+            track_point1[1] = (double)track[point1][1];
+            
+            track_point2[0] = (double)track[point2][0];
+            track_point2[1] = (double)track[point2][2];
             
             //Update pointers to the track. If the new pointers are
             //still behind the car, update again.
             car_coordinates[0] = x;
             car_coordinates[1] = y;
             
-            updateIndicies(&car_coordinates[0]);
+            wanted_heading = updateIndicies(&car_coordinates[0], heading);
             
-            cout << "Point 1: [" << track[point1][0] << "," <<
-                    track[point1][1] << "]" << '\n';
-            cout << "Point 2: [" << track[point2][0] << "," <<
-                    track[point2][1] << "]" << '\n';
+            cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
+            cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
             
-            orthogonalProjection(&car_vector[0], &track_vector[0],
-                    &orth_proj[0]);
+            //Calculate distance between the car and the track.
+            distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]); 
             
-            projection_point[0] = orth_proj[0] + (double)x;
-            projection_point[1] = orth_proj[1] + (double)y;
-            
-            distance = distanceBetweenPoints(&orth_proj[0],
-                            &car_vector_double[0]);
-            
-            distance_to_car = distanceBetweenPoints(&origo[0],
-                            &car_vector_double[0]);
-                            
-            distance_to_track = distanceBetweenPoints(&origo[0],
-                            &projection_point[0]);
-            
-            if(distance_to_car < distance_to_track){
-                distance = distance * -1;
-            }
-            
+            //Publish error message.
             std_msgs::Float64 path_error;
 
-            path_error.data = (float)distance;
+            path_error.data = (float)wanted_heading;
 
             ROS_INFO("Angle error: %.2f", path_error.data);
 
             database_pub.publish(path_error);
 
-            callback_loop = 1;
+            callback_loop ++;
         }
 
 };
@@ -441,10 +608,12 @@ int main(int argc, char **argv){
      */
 
     ros::init(argc, argv, "database_node");
-
+    
+    cout << "Hej" << endl;
+    
     DatabaseHandler obj; 
     //        int count = 0;
-
+    
     ros::spin();
 
     //        ++count;
