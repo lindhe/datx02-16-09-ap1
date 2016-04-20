@@ -106,6 +106,37 @@ class DatabaseHandler{
         }
         
         /**
+        * Function takes the global coordinates of a point and converts them
+        * to coordinates in the cars local coordinate system.
+        * Arguments: car_point[x,y] is the coordinates of the car,
+        * heading is the angle of the car and new_point[x,y] is the
+        * converted coordinates.
+        */
+        
+        //Tested and working!
+        void convertCoordinates(int* car_point, int heading, int* new_point){
+            int car_x, car_y, track_x, track_y, new_x, new_y;
+            
+            car_x = car_point[0];
+            car_y = car_point[1];
+            
+            track_x = track[point2][0];
+            track_y = track[point2][1];
+            
+            new_x = (int)((track_x - car_x)*cos(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*sin(((double)heading*3.1415)/180));
+                    
+            new_y = (int)(-(track_x - car_x)*sin(((double)heading*3.1415)/180) +
+                    (track_y - car_y)*cos(((double)heading*3.1415)/180));                    
+            
+            cout << "New x: " << new_x << endl;
+            cout << "New y: " << new_y << endl;
+                        
+            new_point[0] = new_x;
+            new_point[1] = new_y;
+        }
+        
+        /**
         * Function for calculating the distance between two points.
         * Arguments on form &double[x,y].
         */
@@ -410,7 +441,11 @@ class DatabaseHandler{
             distance_to_track = distanceBetweenPoints(&origo[0],
                             &projection_point[0]);
             
-            if(distance_to_car < distance_to_track){
+            
+            int new_point[2];
+            convertCoordinates(&car_coordinates[0], heading, &new_point[0]);
+            
+            if(new_point[1] < 0){
                 distance = distance * -1;
             }
             
