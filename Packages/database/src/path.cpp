@@ -29,7 +29,7 @@ int main (int argc, char** argv) {
       }
   }
    ofstream file;
-   file.open ("data.txt");
+   file.open ("src/database/src/data.txt");
    if(!line){
    
        for(double i=0; i < limit; i += limit/step) {
