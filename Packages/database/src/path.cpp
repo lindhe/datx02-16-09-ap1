@@ -2,6 +2,7 @@
 #include <fstream>
 #include <getopt.h>
 #include <math.h>
+#include <cstdlib>
 using namespace std;
 #define limit 2*3.1415
 int main (int argc, char** argv) {
@@ -12,13 +13,14 @@ int main (int argc, char** argv) {
   int y_radius = 0;
   int offset = 0;
   bool line = false;
+  extern char *optarg;
   while ((c = getopt(argc, argv, options)) != -1) {
       switch (c) {
-          case 'o': offset = atoi(optarg); break;
           case 'x': x_radius = atoi(optarg); break;
           case 'y': y_radius = atoi(optarg); break;
           case 's': step = atoi(optarg); break;
           case 'l': line = true; break;
+          case 'o': offset = atoi(optarg); break;
           case 'h':
             cout << "-o LENGTH      Offset in millimeter" << endl;
             cout << "-x LENGTH      Radius x-axis in millimeter" << endl;
