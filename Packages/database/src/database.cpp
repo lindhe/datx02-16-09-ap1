@@ -399,6 +399,17 @@ class DatabaseHandler{
                 initializeIndicies(x,y);
             }
             
+            //Update pointers to the track.
+            car_coordinates[0] = x;
+            car_coordinates[1] = y;
+            
+            updateIndicies(&car_coordinates[0]);
+            
+            cout << "Point 1: [" << track[point1][0] << "," <<
+                    track[point1][1] << "]" << '\n';
+            cout << "Point 2: [" << track[point2][0] << "," <<
+                    track[point2][1] << "]" << '\n';
+            
             //Create a vector from closest point on the track to the car,
             //and one from closest point on the track to the next point on
             //the track.
@@ -414,18 +425,6 @@ class DatabaseHandler{
             origo[0] = 0;
             origo[1] = 0;
             
-            //Update pointers to the track. If the new pointers are
-            //still behind the car, update again.
-            car_coordinates[0] = x;
-            car_coordinates[1] = y;
-            
-            updateIndicies(&car_coordinates[0]);
-            
-            cout << "Point 1: [" << track[point1][0] << "," <<
-                    track[point1][1] << "]" << '\n';
-            cout << "Point 2: [" << track[point2][0] << "," <<
-                    track[point2][1] << "]" << '\n';
-            
             orthogonalProjection(&car_vector[0], &track_vector[0],
                     &orth_proj[0]);
             
@@ -434,13 +433,6 @@ class DatabaseHandler{
             
             distance = distanceBetweenPoints(&orth_proj[0],
                             &car_vector_double[0]);
-            
-            distance_to_car = distanceBetweenPoints(&origo[0],
-                            &car_vector_double[0]);
-                            
-            distance_to_track = distanceBetweenPoints(&origo[0],
-                            &projection_point[0]);
-            
             
             int new_point[2];
             convertCoordinates(&car_coordinates[0], heading, &new_point[0]);
