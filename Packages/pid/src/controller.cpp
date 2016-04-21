@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 {
   ROS_INFO("Starting pid with node name %s", node_name.c_str());
 
-  Kp = 0.8, Ki = 0; Kd = 0;	//for testing
+  Kp = 0.8, Ki = 0; Kd = 1;	//for testing
 
   // Initialize ROS stuff
   ros::init(argc, argv, node_name);     // Note node_name can be overidden by launch file

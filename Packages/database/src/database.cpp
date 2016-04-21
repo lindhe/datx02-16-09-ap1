@@ -209,7 +209,6 @@ class DatabaseHandler{
             int car_coordinate_x, car_coordinate_y;
             int track_vector[2], car_vector[2];
             double car_projection[2], track_double[2];
-            double length_of_track_vector;
             
             //Assigning argument values to variables.
             car_coordinate_x = car_information[0];
@@ -219,8 +218,14 @@ class DatabaseHandler{
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
+            cout << "Track_vector: [" << track_vector[0] << "," <<
+                    track_vector[1] << "]" << endl;
+            
             track_double[0] = (double)track_vector[0];
             track_double[1] = (double)track_vector[1];
+                
+            cout << "Track_double: [" << track_double[0] << "," <<
+                    track_double[1] << "]" << endl;
                     
             //Create vector from point 1 to position of car and move to origo.
             car_vector[0] = car_coordinate_x - track[point1][0];
@@ -236,23 +241,29 @@ class DatabaseHandler{
                 "," << car_projection[1] << "]" << '\n';
             
             //Calculate length of the vectors for comparison
-            double lenght_of_track_vector;
-            double length_of_projection_vector;
-            double origo[2] = {0,0};
             
-            lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
+            double length_of_track_vector, length_of_projection_vector;
+            double origo[2];
+            origo[0] = 0;
+            origo[1] = 0;
+            
+            length_of_track_vector = distanceBetweenPoints(&track_double[0],
                                         &origo[0]);
+            
+            cout << "Length_of_track_vector: " << length_of_track_vector << endl;
             
             length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
                                             &origo[0]);
+                                            
+            cout << "Length_of_projection_vector: " << length_of_projection_vector << endl;
             
             //Change the value 100 to the margin we want to have to the next point.
             //Checks if the projection of the car is almost at the right point,
             //and if the projection vector is pointing in the same direction as
             //the track vector.
-            while((length_of_track_vector - length_of_projection_vector < 500) &&
-                    ((track_vector[0] * car_vector[0] > 0) || 
-                    (track_vector[1] * car_vector[1] > 0))){
+            while(((length_of_track_vector - length_of_projection_vector) < 100) &&
+                    ((track_double[0] * car_projection[0] > 0) || 
+                    (track_double[1] * car_projection[1] > 0))){
                 //Wrap around
                 if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
                           point2 >= ((sizeof(track)/8) - 1)){
@@ -286,9 +297,12 @@ class DatabaseHandler{
                 orthogonalProjection(&car_vector[0], &track_vector[0],
                                        &car_projection[0]); 
                 
-                lenght_of_track_vector = distanceBetweenPoints(&track_double[0],
-                                        &origo[0]);
-            
+                cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
+                "," << car_projection[1] << "]" << '\n';
+                
+                length_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                            &origo[0]);
+                
                 length_of_projection_vector = 
                         distanceBetweenPoints(&car_projection[0], &origo[0]);
             }
@@ -416,23 +430,11 @@ class DatabaseHandler{
             car_vector[0] = x - track[point1][0];
             car_vector[1] = y - track[point1][1];
             
-            car_vector_double[0] = (double)car_vector[0];
-            car_vector_double[1] = (double)car_vector[1];
-            
             track_vector[0] = track[point2][0] - track[point1][0];
             track_vector[1] = track[point2][1] - track[point1][1];
             
-            origo[0] = 0;
-            origo[1] = 0;
-            
-            orthogonalProjection(&car_vector[0], &track_vector[0],
-                    &orth_proj[0]);
-            
-            projection_point[0] = orth_proj[0] + (double)x;
-            projection_point[1] = orth_proj[1] + (double)y;
-            
-            distance = distanceBetweenPoints(&orth_proj[0],
-                            &car_vector_double[0]);
+            distance = calculateDistance(&car_vector[0],
+                            &track_vector[0]);
             
             int new_point[2];
             convertCoordinates(&car_coordinates[0], heading, &new_point[0]);
@@ -445,7 +447,7 @@ class DatabaseHandler{
 
             path_error.data = (float)distance;
 
-            ROS_INFO("Angle error: %.2f", path_error.data);
+            ROS_INFO("Distance error: %.2f", path_error.data);
 
             database_pub.publish(path_error);
 
