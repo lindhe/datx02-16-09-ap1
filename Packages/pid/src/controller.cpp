@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 {
   ROS_INFO("Starting pid with node name %s", node_name.c_str());
 
-  Kp = 5.55, Ki = 0; Kd = 0;	//for testing
+//  Kp = 5.55, Ki = 0; Kd = 0;	//for testing
 
   // Initialize ROS stuff
   ros::init(argc, argv, node_name);     // Note node_name can be overidden by launch file
@@ -262,12 +262,12 @@ int main(int argc, char **argv)
   }
 
   // Get params if specified in launch file or as params on command-line, set defaults
-  /*node_priv.param<double>("Kp", Kp, 1.0);
+  node_priv.param<double>("Kp", Kp, 1.0);
   node_priv.param<double>("Ki", Ki, 0.0);
   node_priv.param<double>("Kd", Kd, 0.0);
-  node_priv.param<double>("upper_limit", upper_limit, 1000.0);
-  node_priv.param<double>("lower_limit", lower_limit, -1000.0);
-  node_priv.param<double>("windup_limit", windup_limit, 1000.0);*/ //Debugging
+  node_priv.param<double>("upper_limit", upper_limit, 1100.0);
+  node_priv.param<double>("lower_limit", lower_limit, -1100.0);
+  node_priv.param<double>("windup_limit", windup_limit, 200.0);
   node_priv.param<double>("cutoff_frequency", cutoff_frequency, -1.0);
   node_priv.param<std::string>("topic_from_controller", topic_from_controller, "control_effort");
   node_priv.param<std::string>("path_error", path_error, "path_error");
