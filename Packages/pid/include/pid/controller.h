@@ -36,9 +36,6 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-//#include "pid/plant_msg.h"
-//#include "pid/controller_msg.h"
-
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/update_functions.h>
 #include "ros/ros.h"
@@ -52,9 +49,7 @@
 #include <iostream>
 
 // Primary PID controller input & output variables
-//double plant_state;                 // current output of plant
 double control_effort;              // output of pid controller
-//double setpoint = 0;                // desired output of plant
 double control_error = 0;                   // distance from point in database
 bool pid_enabled = true;            // PID is enabled to run
 
@@ -82,7 +77,7 @@ double tan_filt = 1.;
 // Upper and lower saturation limits
 double upper_limit =  1100.;
 double lower_limit = -1100.; 
-double windup_limit = 200.; // Anti-windup term. Limits the absolute value of the integral term.
+double windup_limit = 1000.; // Anti-windup term. Limits the absolute value of the integral term.
 
 std::vector<double> error(3);
 std::vector<double> filtered_error(3);
@@ -98,7 +93,6 @@ std::string path_error;
 std::string node_name = "pid_node";
 
 ackermann_msgs::AckermannDrive control_msg;
-//std_msgs::Float64 state_msg;
 
 // Diagnostic objects
 double min_loop_frequency = 1;
