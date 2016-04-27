@@ -4,6 +4,7 @@
 #include "std_msgs/Float64.h"
 #include "ackermann_msgs/AckermannDrive.h"
 #include "gulliview_server/Pos.h"
+#include "database.hpp"
 
 #include <iostream>
 #include <fstream>
