@@ -136,6 +136,8 @@ add_executable(gv_fake_node src/gv_fake.cpp)
 
 add_executable(pid_fake_node src/pid_fake.cpp)
 
+add_executable(path src/path.cpp)
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(database_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

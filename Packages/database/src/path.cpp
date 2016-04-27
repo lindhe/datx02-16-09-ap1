@@ -1,19 +1,48 @@
 #include <iostream>
 #include <fstream>
+#include <getopt.h>
 #include <math.h>
+#include <cstdlib>
 using namespace std;
-#define step 50
-#define radius 4000
-#define offset 1000
-int main () {
+#define limit 2*3.1415
+int main (int argc, char** argv) {
+  const char* options = "ho:x:y:s:l";
+  int c;
+  int step = 100;
+  int x_radius = 0;
+  int y_radius = 0;
+  int offset = 0;
+  bool line = false;
+  extern char *optarg;
+  while ((c = getopt(argc, argv, options)) != -1) {
+      switch (c) {
+          case 'x': x_radius = atoi(optarg); break;
+          case 'y': y_radius = atoi(optarg); break;
+          case 's': step = atoi(optarg); break;
+          case 'l': line = true; break;
+          case 'o': offset = atoi(optarg); break;
+          case 'h':
+            cout << "-o LENGTH      Offset in millimeter" << endl;
+            cout << "-x LENGTH      Radius x-axis in millimeter" << endl;
+            cout << "-y LENGTH      Radius y-axis in millimeter" << endl;
+            cout << "-s NUMBER      Number of points on the track" << endl;
+            cout << "-l def:-2000   Line from -radius x-axis to +radius x-axis" << endl;
+            break;
+      }
+  }
    ofstream file;
-   file.open ("data.txt");
-   for(int i= radius; i >= -radius; i = i - step){
-        file << i+offset << " " << (int)sqrt(pow(radius,2) - pow(i, 2))+offset << endl;
+   file.open ("src/database/src/data.txt");
+   if(!line){
+   
+       for(double i=0; i < limit; i += limit/step) {
+           file << (int)(x_radius*cos(i)+offset) << " " << (int)(y_radius*sin(i)+offset) << endl;
+       }
+   }else{
+
+       for(double i=-x_radius; i < x_radius; i += 2*x_radius/step) {
+           file << i << " " << -2000 << endl;
+       }
    } 
-   for(int i= -radius+step; i < radius; i = i + step){
-        file << i+offset << " " << (int)-sqrt(pow(radius,2) - pow(i, 2))+offset << endl;
-   }
    file.close();
    return 0;
 }
