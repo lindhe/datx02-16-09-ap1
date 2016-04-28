@@ -1,0 +1,9 @@
+I filen betyder:
+
+name == namn på filen
+pkg == vilken mapp filen ligger i
+type == rosnodens namn
+
+Resten går att lista ut.
+
+OBS! Launchfilen måste ligga i en package. Vilken package som helst borde gå bra, så länge som den innehåller alla header-filer till de noder som körs i launchfilen.
