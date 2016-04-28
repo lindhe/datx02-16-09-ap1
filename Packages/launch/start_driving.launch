@@ -2,7 +2,7 @@
 
     <node name="gulliview" pkg="gulliview_server" type="gulliview_server" output="screen" />
 
-    <node name="database_angle_node" pkg="database_angle_steering" type="database" output="screen" />
+    <node name="database_node" pkg="database" type="database" output="screen" />
 
     <node name="controller" pkg="pid" type="controller" output="screen" >
       <param name="Kp" value="0.8" />
