@@ -2,7 +2,7 @@
 
     <node name="gulliview" pkg="gulliview_server" type="gulliview_server" output="screen" />
 
-    <node name="database_node" pkg="database" type="database" output="screen" />
+    <node name="database_node" pkg="database" type="database" output="screen" launch-prefix="sudo" />
 
     <node name="controller" pkg="pid" type="controller" output="screen" >
       <param name="Kp" value="5.55" />
@@ -10,6 +10,6 @@
       <param name="Kd" value="0.0" />
     </node>
 
-    <node name="pololu_mc" pkg="pololu_mc" type="pololu_mc" output="screen" launch-prefix="sudo" />
+    <node name="pololu_mc" pkg="pololu_mc" type="pololu_mc" output="screen" />
 
 </launch>
