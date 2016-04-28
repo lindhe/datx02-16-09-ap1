@@ -2,12 +2,12 @@
 
     <node name="gulliview" pkg="gulliview_server" type="gulliview_server" output="screen" />
 
-    <node name="database_angle_node" pkg="database_angle_steering" type="database" output="screen" />
+    <node name="database_node" pkg="database" type="database" output="screen" />
 
     <node name="controller" pkg="pid" type="controller" output="screen" >
-      <param name="Kp" value="0.8" />
+      <param name="Kp" value="5.55" />
       <param name="Ki" value="0.0" />
-      <param name="Kd" value="1.0" />
+      <param name="Kd" value="0.0" />
     </node>
 
     <node name="pololu_mc" pkg="pololu_mc" type="pololu_mc" output="screen" />
