@@ -132,26 +132,14 @@ include_directories(
 ## Declare a C++ executable
 add_executable(database_node src/database.cpp)
 
-add_executable(gv_fake_node src/gv_fake.cpp)
-
-add_executable(pid_fake_node src/pid_fake.cpp)
-
 add_executable(path src/path.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(database_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(gv_fake_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_dependencies(pid_fake_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 ## Specify libraries to link a library or executable target against
 target_link_libraries(database_node ${catkin_LIBRARIES})
-
-target_link_libraries(gv_fake_node ${catkin_LIBRARIES})
-
-target_link_libraries(pid_fake_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##
