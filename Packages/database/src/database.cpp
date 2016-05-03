@@ -61,7 +61,7 @@ double DatabaseHandler::calculateSteeringAngle(int* car_point, int heading){
     double double_origo[2];
     
     //Change this to the length of the car in "coordinate units".
-    length_of_car = 1260;
+    length_of_car = 1300/lookahead;
     
     origo[0] = 0;
     origo[1] = 0;
@@ -273,7 +273,7 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
         
     }while((wanted_heading < -26 || wanted_heading > 26 ||
             (length_of_track_vector - length_of_projection_vector)
-            < 1400) && distance_to_next < 2500);
+            < (1400/2)) && distance_to_next < (2500/2));
     
     return wanted_heading;
 }
@@ -326,7 +326,7 @@ void DatabaseHandler::initializeIndicies(int x1, int y1){
 void DatabaseHandler::loadTrack(){
     string line;
     ifstream datafile;
-    datafile.open("src/database_angle_steering/src/data.txt",ifstream::in);
+    datafile.open("src/database/src/data.txt",ifstream::in);
     int x, y;
     int i = 0;
     

@@ -1,6 +1,8 @@
 #ifndef DATABASE_HPP
 #define DATABASE_HPP
 
+#define lookahead 4
+
 using namespace std;
 
 class DatabaseHandler{
