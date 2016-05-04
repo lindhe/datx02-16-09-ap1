@@ -20,7 +20,7 @@ DatabaseHandler::DatabaseHandler(){
 
         database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
         
-        for(int i = 0; i < 319; i++){
+        for(int i = 0; i < maximum_number_of_points - 1; i++){
             track[i][0] = 0;
             track[i][1] = 0;
         }
@@ -60,9 +60,6 @@ double DatabaseHandler::calculateSteeringAngle(int* car_point, int heading){
     double double_new_coordinates[2];
     double double_origo[2];
     
-    //Change this to the length of the car in "coordinate units".
-    length_of_car = 1300/lookahead;
-    
     origo[0] = 0;
     origo[1] = 0;
     
@@ -85,7 +82,7 @@ double DatabaseHandler::calculateSteeringAngle(int* car_point, int heading){
                
     radius = pow(distance, 2)/(2 * double_new_coordinates[1]);
     
-    angle = atan(length_of_car/radius);
+    angle = atan(length_between_axles_of_car/radius);
     angle = (angle * 180)/3.1415;
     
     return angle;
@@ -201,7 +198,7 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
         while((length_of_track_vector - length_of_projection_vector)<= 20 &&
             ((track_double[0] * car_projection[0] > 0) ||
             (track_double[1] * car_projection[1] > 0)) &&
-            abs((int)steering_angle) < 26 &&
+            abs((int)steering_angle) < maximum_steering_angle &&
             !skip){
             
             //Wrap around. If the the end of the array is reached,
@@ -271,9 +268,10 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
         
         cout << "WANTED HEADING: " << wanted_heading << endl;
         
-    }while((wanted_heading < -26 || wanted_heading > 26 ||
+    }while((wanted_heading < -maximum_steering_angle ||
+            wanted_heading > maximum_steering_angle ||
             (length_of_track_vector - length_of_projection_vector)
-            < (1400/2)) && distance_to_next < (2500/2));
+            < lookahead) && distance_to_next < maximum_lookahead_range);
     
     return wanted_heading;
 }

@@ -1,7 +1,25 @@
 #ifndef DATABASE_HPP
 #define DATABASE_HPP
 
-#define lookahead 4
+//Maximum number of points to construct the track.
+//Have one more point in the maximum value than needed.
+#define maximum_number_of_points 320
+
+//The length between the back axle and front axle of the car
+#define length_between_axles_of_car 325
+
+//The maximum steering angle of the car
+#define maximum_steering_angle 26
+
+//Lookahead distance of the car. A point within this distance of the car
+//won't be chosen
+#define lookahead 700
+//Old value - 1400
+
+//The maximum lookahead of the car. A point outside this distance wont be
+//chosen.
+#define maximum_lookahead_range 1250
+//Old value 2500
 
 using namespace std;
 
@@ -30,7 +48,7 @@ private:
     * Initialized to 0. Change in case we need coordinates with zeros
     *
     */
-    int track[320][2];
+    int track[maximum_number_of_points][2];
     
     /**
     *  Index in array "track" to the 2 closest points to the car.
