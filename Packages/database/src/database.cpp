@@ -327,13 +327,14 @@ void DatabaseHandler::initializeIndicies(int x1, int y1){
 void DatabaseHandler::loadTrack(){
     string line;
     ifstream datafile;
-    string path = ros::package::getPath("roslib");
+    string path = ros::package::getPath("database");
     string file_path = "/src/data.txt";
-    char *pointer_to_path = strcat((char*)&path, file_path.c_str());
+    cout << "Hallå" << endl;
+    path = path + file_path;
+    cout << "Path to file: " << path << endl;
     datafile.open(path.c_str(),ifstream::in);
     int x, y;
     int i = 0;
-    
     if(datafile.is_open()){
         while(getline(datafile,line)){
             stringstream trackstream (line);

@@ -6,6 +6,7 @@ project(database)
 ## is used, also find other catkin packages
 
 find_package(catkin REQUIRED COMPONENTS
+  roslib
   roscpp
   rospy
   std_msgs
@@ -57,7 +58,7 @@ generate_messages(
   std_msgs
 )
 
-catkin_package(CATKIN_DEPENDS message_runtime)
+catkin_package(CATKIN_DEPENDS roslib roscpp message_runtime)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
