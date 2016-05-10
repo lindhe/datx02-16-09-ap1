@@ -13,6 +13,8 @@
 #include <sstream>
 #include <cmath>
 #include <numeric>
+#include <stdlib.h>
+#include <ros/package.h>
 
 using namespace std;
 
@@ -325,7 +327,10 @@ void DatabaseHandler::initializeIndicies(int x1, int y1){
 void DatabaseHandler::loadTrack(){
     string line;
     ifstream datafile;
-    datafile.open("src/database/src/data.txt",ifstream::in);
+    string path = ros::package::getPath("roslib");
+    string file_path = "/src/data.txt";
+    char *pointer_to_path = strcat((char*)&path, file_path.c_str());
+    datafile.open(path.c_str(),ifstream::in);
     int x, y;
     int i = 0;
     
@@ -342,7 +347,10 @@ void DatabaseHandler::loadTrack(){
         }
         datafile.close();
     }
-    else cout << "Unable to open file";
+    else{
+        cout << "Unable to open file, shutting down." << endl;
+        exit(0);
+    }
     
     return;
 }
