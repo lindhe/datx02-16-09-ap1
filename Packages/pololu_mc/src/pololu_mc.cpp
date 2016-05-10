@@ -21,7 +21,7 @@
 
 using namespace std;
 using namespace boost;
-
+double control_speed;
 // Callback when something is published on 'control_effort'
 void ControlEffortCallback(const ackermann_msgs::AckermannDrive::ConstPtr& control_effort_input)
 {
@@ -29,6 +29,7 @@ void ControlEffortCallback(const ackermann_msgs::AckermannDrive::ConstPtr& contr
   ROS_INFO("Got a message!: \nSteering angle: %f\nSteering angle velocity:%f\nSpeed: %f\nAcceleration: %f\nJerk: %f\n", control_effort_input->steering_angle, control_effort_input->steering_angle_velocity, control_effort_input->speed,control_effort_input->acceleration, control_effort_input->jerk);
 
     control_effort = control_effort_input->steering_angle;
+    control_speed = control_effort_input->speed;
 }
 
 /*
@@ -251,7 +252,7 @@ int main(int argc, char **argv)
 
   // Set constant maximum speed for the steering and constant speed for the mc.
   set_steering_speed(20);
-  set_speed(6055);
+  //set_speed(6055);
 
   ros::NodeHandle node_priv("~");  //Not needed now, but cound maybe be useful later
 
@@ -279,7 +280,7 @@ int main(int argc, char **argv)
 
   // Calculate a value between 5000 and 7000 as the angle to be set.
     set_steering_target(control_effort+6000);
-
+    set_speed(control_speed+6000);
     ROS_INFO("steering: %f", control_effort+6000);  //Debugging
 
     // But process callbacks every loop

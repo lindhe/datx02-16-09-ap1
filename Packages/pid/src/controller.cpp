@@ -38,13 +38,14 @@
 
 #include <pid/controller.h>
 #include <pid/PidConfig.h>
-
+#include <pid/setpoint_msg.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros/time.h>
-
-void setpoint_callback(const std_msgs::Float64& setpoint_msg)
+double control_speed = 0;
+void setpoint_callback(const pid::setpoint_msg& setpoint_msg)
 {
-  control_error = setpoint_msg.data;//10;
+  control_error = setpoint_msg.angle;//10;
+  control_speed = setpoint_msg.speed;//10;
 
   ROS_INFO("control error: %f", control_error);
 
@@ -160,6 +161,7 @@ void setpoint_callback(const std_msgs::Float64& setpoint_msg)
   {
     control_effort = control_effort;
     control_msg.steering_angle = control_effort;
+    control_msg.speed = control_speed;
     control_effort_pub.publish(control_msg);
   }
   else

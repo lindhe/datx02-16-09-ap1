@@ -3,6 +3,7 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
 #include "ackermann_msgs/AckermannDrive.h"
+#include "pid/setpoint_msg.h"
 #include "gulliview_server/Pos.h"
 #include "database.hpp"
 
@@ -16,7 +17,7 @@
 using namespace std;
 
 DatabaseHandler::DatabaseHandler(){
-        database_pub = n.advertise<std_msgs::Float64>("path_error", 1000);
+        database_pub = n.advertise<pid::setpoint_msg>("path_error", 1000);
 
         database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
         
@@ -355,7 +356,7 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     double track_point[2], origo_point[2], orth_proj[2];
     double track_point1[2], track_point2[2], track_double[2];
     double distance_to_car, origo_to_car, origo_to_track;
-    double division, wanted_heading, projection_vector, track_length;
+    double division, wanted_heading, wanted_speed, projection_vector, track_length;
     float error;
     x = (int)msg.x;
     y = (int)msg.y;
@@ -383,7 +384,11 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     
     car_coordinates[0] = x;
     car_coordinates[1] = y;
-    
+    if(x < -3000 || x > 3000 || y > 3000 || y < -3000){
+        wanted_speed = 0;
+    }else{
+        wanted_speed = 55;
+    }
     wanted_heading = updateIndicies(&car_coordinates[0], heading);
     
     cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
@@ -391,11 +396,12 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     
     distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]); 
     
-    std_msgs::Float64 path_error;
+    pid::setpoint_msg path_error;
 
-    path_error.data = (float)wanted_heading;
+    path_error.angle = (float)wanted_heading;
+    path_error.speed = (float)wanted_speed;
 
-    ROS_INFO("Angle error: %.2f", path_error.data);
+    ROS_INFO("Angle error: %.2f", path_error.angle);
 
     database_pub.publish(path_error);
 
