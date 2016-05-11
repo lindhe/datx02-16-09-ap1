@@ -393,9 +393,8 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     
     car_coordinates[0] = x;
     car_coordinates[1] = y;
-    if(x < -3000 || x > 3000 || y > 3000 || y < -3000){
-        wanted_speed = 0;
-    }else{
+    wanted_speed = 0;
+    if(x > minimum_x && x < maximum_x && y > minimum_y && y < maximum_y){
         wanted_speed = 55;
     }
     wanted_heading = updateIndicies(&car_coordinates[0], heading);

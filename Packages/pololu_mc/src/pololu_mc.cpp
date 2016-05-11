@@ -276,8 +276,6 @@ int main(int argc, char **argv)
     }
     counter = (counter+1)%1000;
 
-    ros::spinOnce();
-
   // Calculate a value between 5000 and 7000 as the angle to be set.
     set_steering_target(control_effort+6000);
     set_speed(control_speed+6000);

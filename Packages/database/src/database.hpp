@@ -13,13 +13,28 @@
 
 //Lookahead distance of the car. A point within this distance of the car
 //won't be chosen
-#define lookahead 700
+#define lookahead 200
 //Old value - 1400
 
 //The maximum lookahead of the car. A point outside this distance wont be
 //chosen.
 #define maximum_lookahead_range 1250
 //Old value 2500
+
+//The maximum range of the track in all directions. If the car leaves this
+//area, it will stop running.
+
+//Maximum x-value
+#define maximum_x 2300
+
+//Minimum x-value
+#define minimum_x -1700
+
+//Maximum y-value
+#define maximum_y 2000
+
+//Minimum y-value
+#define minimum_y -1400
 
 using namespace std;
 
