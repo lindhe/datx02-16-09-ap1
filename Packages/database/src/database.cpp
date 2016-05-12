@@ -198,37 +198,39 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
     do{
         //Loop until a segment of the track in front of the car is chosen.
         //Do this only once.
-        while((length_of_track_vector - length_of_projection_vector)<= 20 &&
-            ((track_double[0] * car_projection[0] > 0) ||
-            (track_double[1] * car_projection[1] > 0)) &&
-            abs((int)steering_angle) < maximum_steering_angle &&
-            !skip){
-            
-            //Wrap around. If the the end of the array is reached,
-            //go to the beginning.
-            if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
-                      point2 >= ((sizeof(track)/8) - 1)){
-                point1 = point2;
-                point2 = 0;
+        if(skip == 0){
+            while((length_of_track_vector - length_of_projection_vector)<= 20 &&
+                ((track_double[0] * car_projection[0] > 0) ||
+                (track_double[1] * car_projection[1] > 0)) &&
+                abs((int)steering_angle) < maximum_steering_angle &&
+                !skip){
+                
+                //Wrap around. If the the end of the array is reached,
+                //go to the beginning.
+                if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                          point2 >= ((sizeof(track)/8) - 1)){
+                    point1 = point2;
+                    point2 = 0;
+                }
+                else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                           point1 >= ((sizeof(track)/8) - 1)){
+                    point1 = 0;
+                    point2 = 1;
+                }
+                else {
+                    point1 = point2;
+                    point2 = point2 + 1;
+                }
+                
+                track_vector[0] = track[point2][0] - track[point1][0];
+                track_vector[1] = track[point2][1] - track[point1][1];
+                
+                track_double[0] = (double)track_vector[0];
+                track_double[1] = (double)track_vector[1];
+                
+                car_vector[0] = car_coordinate_x - track[point1][0];
+                car_vector[1] = car_coordinate_y - track[point1][1];
             }
-            else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
-                       point1 >= ((sizeof(track)/8) - 1)){
-                point1 = 0;
-                point2 = 1;
-            }
-            else {
-                point1 = point2;
-                point2 = point2 + 1;
-            }
-            
-            track_vector[0] = track[point2][0] - track[point1][0];
-            track_vector[1] = track[point2][1] - track[point1][1];
-            
-            track_double[0] = (double)track_vector[0];
-            track_double[1] = (double)track_vector[1];
-            
-            car_vector[0] = car_coordinate_x - track[point1][0];
-            car_vector[1] = car_coordinate_y - track[point1][1];
         }
         if(skip == 1){
             //Wrap around
@@ -270,7 +272,9 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
         distance_to_next = distanceBetweenPoints(&double_point2[0], &car_point[0]);
         
         cout << "WANTED HEADING: " << wanted_heading << endl;
-        
+        cout << "Length_of_track_vector: " << length_of_track_vector << endl;
+        cout << "length_of_projection_vector: " << length_of_projection_vector << endl;
+        cout << "distance_to_next: " << distance_to_next << endl;
     }while((wanted_heading < -maximum_steering_angle ||
             wanted_heading > maximum_steering_angle ||
             (length_of_track_vector - length_of_projection_vector)
@@ -395,7 +399,7 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     car_coordinates[1] = y;
     wanted_speed = 0;
     if(x > minimum_x && x < maximum_x && y > minimum_y && y < maximum_y){
-        wanted_speed = 55;
+        wanted_speed = 75;
     }
     wanted_heading = updateIndicies(&car_coordinates[0], heading);
     
