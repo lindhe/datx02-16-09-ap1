@@ -13,7 +13,7 @@
 
 //Lookahead distance of the car. A point within this distance of the car
 //won't be chosen
-#define lookahead 400
+#define lookahead 200
 //Old value - 1400
 
 //The maximum lookahead of the car. A point outside this distance wont be

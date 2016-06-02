@@ -277,7 +277,7 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
         cout << "distance_to_next: " << distance_to_next << endl;
     }while((wanted_heading < -maximum_steering_angle ||
             wanted_heading > maximum_steering_angle ||
-            (length_of_track_vector - length_of_projection_vector)
+            (length_of_track_vector - length_of_projection_vector) //distance_to_next
             < lookahead) && distance_to_next < maximum_lookahead_range);
     
     return wanted_heading;
