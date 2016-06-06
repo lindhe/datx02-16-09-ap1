@@ -18,10 +18,17 @@
 #include "pololu_mc.hpp"
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
+#include <signal.h>
 
 using namespace std;
 using namespace boost;
+double control_speed;
+void exit_handler(int s){
+	printf("Closing\n");
+	set_speed(6000);
+	exit(1);
 
+}
 // Callback when something is published on 'control_effort'
 void ControlEffortCallback(const ackermann_msgs::AckermannDrive::ConstPtr& control_effort_input)
 {
@@ -29,6 +36,8 @@ void ControlEffortCallback(const ackermann_msgs::AckermannDrive::ConstPtr& contr
   ROS_INFO("Got a message!: \nSteering angle: %f\nSteering angle velocity:%f\nSpeed: %f\nAcceleration: %f\nJerk: %f\n", control_effort_input->steering_angle, control_effort_input->steering_angle_velocity, control_effort_input->speed,control_effort_input->acceleration, control_effort_input->jerk);
 
     control_effort = control_effort_input->steering_angle;
+    control_speed = control_effort_input->speed;
+    set_speed(control_speed+6000);
 }
 
 /*
@@ -240,7 +249,6 @@ void process_packet(const unsigned char *data, int len) {
 */
 int main(int argc, char **argv)
 {
-
   ros::init(argc, argv, "Pololu_Motor_Controller_Actuator");
   ros::NodeHandle n;
 
@@ -251,7 +259,7 @@ int main(int argc, char **argv)
 
   // Set constant maximum speed for the steering and constant speed for the mc.
   set_steering_speed(20);
-  set_speed(6055);
+  //set_speed(6055);
 
   ros::NodeHandle node_priv("~");  //Not needed now, but cound maybe be useful later
 
@@ -262,6 +270,11 @@ int main(int argc, char **argv)
   ros::Subscriber sub = n.subscribe("control_effort", 1, ControlEffortCallback );
 
   int counter = 0;
+  struct sigaction act;
+  act.sa_handler = exit_handler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags=0;
+  sigaction(SIGINT, &act, 0);
   while (ros::ok()) {
 
     // Get values every x ms
@@ -275,11 +288,8 @@ int main(int argc, char **argv)
     }
     counter = (counter+1)%1000;
 
-    ros::spinOnce();
-
   // Calculate a value between 5000 and 7000 as the angle to be set.
     set_steering_target(control_effort+6000);
-
     ROS_INFO("steering: %f", control_effort+6000);  //Debugging
 
     // But process callbacks every loop
