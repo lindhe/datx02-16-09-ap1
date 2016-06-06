@@ -5,14 +5,14 @@
 //Have one more point in the maximum value than needed.
 #define maximum_number_of_points 320
 
-//The length between the back axle and front axle of the car
+//The length between the back axle and front axle of the car. For Pure Pursuit.
 #define length_between_axles_of_car 325
 
-//The maximum steering angle of the car
+//The maximum steering angle of the car. For Pure Pursuit.
 #define maximum_steering_angle 26
 
 //Lookahead distance of the car. A point within this distance of the car
-//won't be chosen
+//won't be chosen. For all steering methods.
 #define lookahead 200
 //Old value - 1400
 
@@ -22,7 +22,7 @@
 //---------------------------IMPORTANT-----------------------------------
 
 //If using a circular track, this value needs to be smaller than the
-//radius of the circle
+//radius of the circle. Only for Pure Pursuit
 #define maximum_lookahead_range 1150
 //Old value 2500
 
@@ -90,7 +90,7 @@ public:
     /*
     * Constructor to initialize the publisher/subscriber and load the track
     */
-    DatabaseHandler();
+    DatabaseHandler(char steeringMethod);
     
     /**
     * Projects one vector onto another and returns the
@@ -105,7 +105,8 @@ public:
     void orthogonalProjection(int* vec2, int* vec1, double* res_vec);
     
     /**
-    * Calculates the new steering angle of the car. 
+    * Calculates the new steering angle of the car. This method is only
+    * used for Point Pursuit.
     *
     * Arguments: car_point[x,y] is the coordinates of the car and heading
     * is the angle of the car in degrees.
@@ -157,8 +158,13 @@ public:
     *
     * Returns the angle in degrees the car needs to have to reach the next
     * point.
+    *
+    * PP is for Point Pursuit, FTC for Follow the Carrot, and DS for
+    * Distance Steering.
     */
-    double updateIndicies(int* car_information, int car_heading);
+    double updateIndiciesPP(int* car_information, int car_heading);
+    double updateIndiciesFTC(int* car_information, int car_heading);
+    double updateIndiciesDS(int* car_information, int car_heading);
     
     /**
     * Initializes track pointers. Chooses the closest point to the car and the
@@ -178,8 +184,13 @@ public:
     /**
     * Runs every time the program receives a message from the master node.
     * Runs updateIndicies() and publishes the error that was returned.
+    *
+    * PP is for Point Pursuit, FTC for Follow the Carrot, and DS for
+    * Distance Steering.
     */
-    void callback(const gulliview_server::Pos& msg);
+    void callbackPP(const gulliview_server::Pos& msg);
+    void callbackFTC(const gulliview_server::Pos& msg);
+    void callbackDS(const gulliview_server::Pos& msg);
     
 };
 

@@ -18,10 +18,18 @@
 
 using namespace std;
 
-DatabaseHandler::DatabaseHandler(){
-        database_pub = n.advertise<pid::setpoint_msg>("path_error", 1000);
-
-        database_sub = n.subscribe("position",1,&DatabaseHandler::callback, this);
+DatabaseHandler::DatabaseHandler(char steeringMethod){
+        switch (steeringMethod) {
+            case 'p': database_pub = n.advertise<pid::setpoint_msg>("path_error", 1000);
+                      database_sub = n.subscribe("position",1,&DatabaseHandler::callbackPP, this);
+                      break;
+            case 'f': database_pub = n.advertise<pid::setpoint_msg>("path_error", 1000);
+                      database_sub = n.subscribe("position",1,&DatabaseHandler::callbackFTC, this);
+                      break;
+            case 'd': database_pub = n.advertise<pid::setpoint_msg>("path_error", 1000);
+                      database_sub = n.subscribe("position",1,&DatabaseHandler::callbackDS, this);
+                      break;
+        }
         
         for(int i = 0; i < maximum_number_of_points - 1; i++){
             track[i][0] = 0;
@@ -106,9 +114,6 @@ void DatabaseHandler::convertCoordinates(int* car_point, int heading,
             
     new_y = (int)(-(track_x - car_x)*sin(((double)heading*3.1415)/180) +
             (track_y - car_y)*cos(((double)heading*3.1415)/180));                    
-    
-    cout << "New x: " << new_x << endl;
-    cout << "New y: " << new_y << endl;
                 
     new_point[0] = new_x;
     new_point[1] = new_y;
@@ -155,7 +160,8 @@ double DatabaseHandler::calculateDistance(int* vec2, int* vec1){
     return result;
 }
 
-double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
+//updateIndicies Pure Pursuit
+double DatabaseHandler::updateIndiciesPP(int* car_information, int car_heading){
     int car_coordinate_x, car_coordinate_y;
     int track_vector[2], car_vector[2];
     double car_projection[2], track_double[2], car_point[2];
@@ -181,9 +187,7 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
     
     orthogonalProjection(&car_vector[0], &track_vector[0],
                             &car_projection[0]);                     
-    cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
-        "," << car_projection[1] << "]" << '\n';
-    
+
     length_of_track_vector = distanceBetweenPoints(&track_double[0],
                                 &origo[0]);
     
@@ -191,7 +195,6 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
                                     &origo[0]);
     
     steering_angle = calculateSteeringAngle(&car_information[0], car_heading);
-    cout << "Steering angle needed: " << steering_angle << endl;
     
     double length_track, distance_to_next;
     int skip = 0;
@@ -271,16 +274,200 @@ double DatabaseHandler::updateIndicies(int* car_information, int car_heading){
         
         distance_to_next = distanceBetweenPoints(&double_point2[0], &car_point[0]);
         
-        cout << "WANTED HEADING: " << wanted_heading << endl;
-        cout << "Length_of_track_vector: " << length_of_track_vector << endl;
-        cout << "length_of_projection_vector: " << length_of_projection_vector << endl;
-        cout << "distance_to_next: " << distance_to_next << endl;
     }while((wanted_heading < -maximum_steering_angle ||
             wanted_heading > maximum_steering_angle ||
             (length_of_track_vector - length_of_projection_vector) //distance_to_next
             < lookahead) && distance_to_next < maximum_lookahead_range);
     
     return wanted_heading;
+}
+
+//updateIndicies Follow the Carrot
+double DatabaseHandler::updateIndiciesFTC(int* car_information, int car_heading){
+    int car_coordinate_x, car_coordinate_y;
+    int track_vector[2], car_vector[2];
+    double car_projection[2], track_double[2], car_point[2];
+    double heading, wanted_heading, steering_angle;
+    double length_of_track_vector, length_of_projection_vector;
+    double origo[2] = {0,0};
+    
+    car_coordinate_x = car_information[0];
+    car_coordinate_y = car_information[1];
+    
+    car_point[0] = (double)car_coordinate_x; 
+    car_point[1] = (double)car_coordinate_y;
+    heading = (double)car_heading;
+    
+    track_vector[0] = track[point2][0] - track[point1][0];
+    track_vector[1] = track[point2][1] - track[point1][1];
+    
+    track_double[0] = (double)track_vector[0];
+    track_double[1] = (double)track_vector[1];
+    
+    car_vector[0] = car_coordinate_x - track[point1][0];
+    car_vector[1] = car_coordinate_y - track[point1][1];
+    
+    orthogonalProjection(&car_vector[0], &track_vector[0],
+                            &car_projection[0]);                     
+    
+    length_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                &origo[0]);
+    
+    length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
+                                    &origo[0]);
+    
+    double length_track, distance_to_next;
+        
+    //Loop until a segment of the track in front of the car is chosen.
+    while((length_of_track_vector - length_of_projection_vector)<= lookahead &&
+        ((track_double[0] * car_projection[0] > 0) ||
+        (track_double[1] * car_projection[1] > 0))){
+            
+        if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                  point2 >= ((sizeof(track)/8) - 1)){
+            point1 = point2;
+            point2 = 0;
+        }
+        else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                   point1 >= ((sizeof(track)/8) - 1)){
+            point1 = 0;
+            point2 = 1;
+        }
+        else {
+            point1 = point2;
+            point2 = point2 + 1;
+        }
+        
+        track_vector[0] = track[point2][0] - track[point1][0];
+        track_vector[1] = track[point2][1] - track[point1][1];
+        
+        track_double[0] = (double)track_vector[0];
+        track_double[1] = (double)track_vector[1];
+        
+        car_vector[0] = car_coordinate_x - track[point1][0];
+        car_vector[1] = car_coordinate_y - track[point1][1];
+    }
+        
+    vector<double> ref_point(2);       
+    vector<double> next_point(2);       
+    vector<double> result_point(2);       
+    ref_point[0] = 1;
+    ref_point[1] = 0;
+    next_point[0] = (double)track[point2][0] - car_point[0];
+    next_point[1] = (double)track[point2][1] - car_point[1];
+    length_track = sqrt(pow(next_point[0],2) + pow(next_point[1],2));
+    result_point[0] = next_point[0]/length_track; 
+    result_point[1] = next_point[1]/length_track;
+    double dotproduct = inner_product(result_point.begin(),
+        result_point.end(), ref_point.begin(), 0.0);
+    double angle = acos(dotproduct) * 180.0 / 3.14159265; 
+    if(next_point[1] < 0){
+        angle = 360.0 - angle;
+    }
+    
+    wanted_heading = angle - heading;
+    
+    if(abs((int)(angle-heading)) > 180){
+        if(angle > heading){
+            wanted_heading = wanted_heading - 360;
+        }
+        else{
+            wanted_heading = 360 + wanted_heading;
+        }
+    }
+    
+    return wanted_heading;
+}
+
+//updateIndicies Distance Steering
+//Note: The return value and second argument are not used. They are there
+//for this function to match the updateIndicies() of the other steering
+//methods and make use of function pointers.
+double DatabaseHandler::updateIndiciesDS(int* car_information, int useless){
+    int car_coordinate_x, car_coordinate_y;
+    int track_vector[2], car_vector[2];
+    double car_projection[2], track_double[2];
+    
+    car_coordinate_x = car_information[0];
+    car_coordinate_y = car_information[1];
+    
+    track_vector[0] = track[point2][0] - track[point1][0];
+    track_vector[1] = track[point2][1] - track[point1][1];
+    
+    cout << "Track_vector: [" << track_vector[0] << "," <<
+            track_vector[1] << "]" << endl;
+    
+    track_double[0] = (double)track_vector[0];
+    track_double[1] = (double)track_vector[1];
+        
+    cout << "Track_double: [" << track_double[0] << "," <<
+            track_double[1] << "]" << endl;
+    
+    car_vector[0] = car_coordinate_x - track[point1][0];
+    car_vector[1] = car_coordinate_y - track[point1][1];
+    
+    orthogonalProjection(&car_vector[0], &track_vector[0],
+                            &car_projection[0]);                     
+    
+    cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
+        "," << car_projection[1] << "]" << '\n';
+    
+    double length_of_track_vector, length_of_projection_vector;
+    double origo[2];
+    origo[0] = 0;
+    origo[1] = 0;
+    
+    length_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                &origo[0]);
+    
+    cout << "Length_of_track_vector: " << length_of_track_vector << endl;
+    
+    length_of_projection_vector = distanceBetweenPoints(&car_projection[0],
+                                    &origo[0]);
+                                    
+    cout << "Length_of_projection_vector: " << length_of_projection_vector << endl;
+    
+    while(((length_of_track_vector - length_of_projection_vector) < lookahead) &&
+            ((track_double[0] * car_projection[0] > 0) || 
+            (track_double[1] * car_projection[1] > 0))){
+        //Wrap around
+        if((track[point2 + 1][0] == 0 && track[point2 + 1][1] == 0) ||
+                  point2 >= ((sizeof(track)/8) - 1)){
+            point1 = point2;
+            point2 = 0;
+        }
+        else if((track[point1 + 1][0] == 0 && track[point1 + 1][1] == 0) ||
+                   point1 >= ((sizeof(track)/8) - 1)){
+            point1 = 0;
+            point2 = 1;
+        }
+        else {
+            point1 = point2;
+            point2 = point2 + 1;
+        }
+        
+        track_vector[0] = track[point2][0] - track[point1][0];
+        track_vector[1] = track[point2][1] - track[point1][1];
+        
+        track_double[0] = (double)track_vector[0];
+        track_double[1] = (double)track_vector[1];
+        
+        car_vector[0] = car_coordinate_x - track[point1][0];
+        car_vector[1] = car_coordinate_y - track[point1][1];
+        
+        orthogonalProjection(&car_vector[0], &track_vector[0],
+                               &car_projection[0]); 
+        
+        cout << "Orthogonal Projection Vector: [" << car_projection[0] <<
+        "," << car_projection[1] << "]" << '\n';
+        
+        length_of_track_vector = distanceBetweenPoints(&track_double[0],
+                                    &origo[0]);
+        
+        length_of_projection_vector = 
+                distanceBetweenPoints(&car_projection[0], &origo[0]);
+    }
+    return 0;
 }
 
 void DatabaseHandler::initializeIndicies(int x1, int y1){
@@ -333,9 +520,7 @@ void DatabaseHandler::loadTrack(){
     ifstream datafile;
     string path = ros::package::getPath("database");
     string file_path = "/src/data.txt";
-    cout << "Hallå" << endl;
     path = path + file_path;
-    cout << "Path to file: " << path << endl;
     datafile.open(path.c_str(),ifstream::in);
     int x, y;
     int i = 0;
@@ -360,7 +545,8 @@ void DatabaseHandler::loadTrack(){
     return;
 }
 
-void DatabaseHandler::callback(const gulliview_server::Pos& msg){
+//callback Pure Pursuit
+void DatabaseHandler::callbackPP(const gulliview_server::Pos& msg){
     ROS_INFO("I heard: x = %lld", (long long)msg.x);
     ROS_INFO("I heard: y = %lld", (long long)msg.y);
     ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
@@ -401,10 +587,9 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     if(x > minimum_x && x < maximum_x && y > minimum_y && y < maximum_y){
         wanted_speed = 75;
     }
-    wanted_heading = updateIndicies(&car_coordinates[0], heading);
+    wanted_heading = updateIndiciesPP(&car_coordinates[0], heading);
     
-    cout << "Point 1: [" << track[point1][0] << "," << track[point1][1] << "]" << '\n';
-    cout << "Point 2: [" << track[point2][0] << "," << track[point2][1] << "]" << '\n';
+    cout << "Pure Pursuit: Calculated steering angle: " << wanted_heading << endl;
     
     distance_to_car = calculateDistance(&car_vector[0], &track_vector[0]); 
     
@@ -413,20 +598,146 @@ void DatabaseHandler::callback(const gulliview_server::Pos& msg){
     path_error.angle = (float)wanted_heading;
     path_error.speed = (float)wanted_speed;
 
-    ROS_INFO("Angle error: %.2f", path_error.angle);
+    database_pub.publish(path_error);
+
+    callback_loop ++;
+}
+
+//callback Follow the Carrot
+void DatabaseHandler::callbackFTC(const gulliview_server::Pos& msg){
+    ROS_INFO("I heard: x = %lld", (long long)msg.x);
+    ROS_INFO("I heard: y = %lld", (long long)msg.y);
+    ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
+    int x, y, heading;
+    int car_coordinates[2], track_vector[2], car_vector[2];
+    double track_point[2], origo_point[2], orth_proj[2];
+    double track_point1[2], track_point2[2], track_double[2];
+    double distance_to_car, origo_to_car, origo_to_track;
+    double division, wanted_heading, projection_vector, track_length;
+    float error;
+    x = (int)msg.x;
+    y = (int)msg.y;
+    heading = (int)msg.heading;
+    
+    //Instead use a global variable here that is initialized and
+    //updated just one time in function main.
+    if(callback_loop == 0){
+        initializeIndicies(x,y);
+    }
+    
+    car_vector[0] = x - track[point1][0];
+    car_vector[1] = y - track[point1][1];
+    
+    track_vector[0] = track[point2][0] - track[point1][0];
+    track_vector[1] = track[point2][1] - track[point1][1];
+    
+    track_double[0] = (double)track_vector[0];
+    track_double[1] = (double)track_vector[1];
+    
+    track_point1[0] = (double)track[point1][0];
+    track_point1[1] = (double)track[point1][1];
+    
+    track_point2[0] = (double)track[point2][0];
+    track_point2[1] = (double)track[point2][2];
+    
+    car_coordinates[0] = x;
+    car_coordinates[1] = y;
+    
+    wanted_heading = updateIndiciesFTC(&car_coordinates[0], heading);
+    
+    cout << "Follow the carrot: Calculated steering angle: " << wanted_heading << endl;
+    
+    int wanted_speed = 75;
+    
+    pid::setpoint_msg path_error;
+
+    path_error.angle = (float)wanted_heading;
+    path_error.speed = (float)wanted_speed;
 
     database_pub.publish(path_error);
 
     callback_loop ++;
 }
 
-int main(int argc, char **argv){
+//callback Distance Steering
+void DatabaseHandler::callbackDS(const gulliview_server::Pos& msg){
+    ROS_INFO("I heard: x = %lld", (long long)msg.x);
+    ROS_INFO("I heard: y = %lld", (long long)msg.y);
+    ROS_INFO("I heard: heading = %lld", (long long)msg.heading);
+    int x, y, heading;
+    int car_coordinates[2], track_vector[2], car_vector[2];
+    double distance, distance_to_track, distance_to_car;
+    double orth_proj[2], car_vector_double[2], origo[2];
+    double projection_point[2];
+    float error;
+    x = (int)msg.x;
+    y = (int)msg.y;
+    heading = (int)msg.heading;
+    
+    //Maybe rewrite this with a variable that is updated only once to a
+    //chosen value.
+    if(callback_loop == 0){
+        initializeIndicies(x,y);
+    }
+    
+    car_coordinates[0] = x;
+    car_coordinates[1] = y;
+    
+    double useless = updateIndiciesDS(&car_coordinates[0], 1);
+    
+    car_vector[0] = x - track[point1][0];
+    car_vector[1] = y - track[point1][1];
+    
+    track_vector[0] = track[point2][0] - track[point1][0];
+    track_vector[1] = track[point2][1] - track[point1][1];
+    
+    distance = calculateDistance(&car_vector[0],
+                    &track_vector[0]);
+    
+    int new_point[2];
+    convertCoordinates(&car_coordinates[0], heading, &new_point[0]);
+    
+    if(new_point[1] < 0){
+        distance = distance * -1;
+    }
+    
+    cout << "Distance Steering: Calculated error distance: " << distance << endl;
 
+    int wanted_speed = 75;
+    
+    pid::setpoint_msg path_error;
+
+    path_error.angle = (float)distance;
+    path_error.speed = (float)wanted_speed;
+
+    database_pub.publish(path_error);
+
+    callback_loop ++;
+
+    callback_loop = 1;
+}
+
+int main(int argc, char **argv){
     ros::init(argc, argv, "database_node");
     
-    cout << "Hej" << endl;
+    const char* options = "pfdh";
+    int c;
+    char method;
+     
+    c = getopt(argc, argv, options);
+    switch (c) {
+        case 'p': method = 'p'; break;
+        case 'f': method = 'f'; break;
+        case 'd': method = 'd'; break;
+        case 'h':
+            cout << "-p   Choose Pure Pursuit." << endl;
+            cout << "-f   Choose Follow the Carrot." << endl;
+            cout << "-d   Choose Distance Steering." << endl;
+            exit(0);
+        default: method = 'p'; break;
+    }
     
-    DatabaseHandler obj; 
+    DatabaseHandler obj(method);
     
     ros::spin();
     
